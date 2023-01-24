@@ -3,9 +3,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
-from .serializers.actor import FullActorSerializer, SimpleActorSerializer
 from .models import Movie, Actor
+from .serializers.actor import FullActorSerializer, SimpleActorSerializer
 from .serializers.movie import FullMovieSerializer, SimpleMovieSerializer
+from .serializers.user import UserSerializer
 
 
 @api_view(['GET', 'POST'])
@@ -84,6 +85,15 @@ def actor_movies(request, actor_id, movie_id):
 
     actor.movie_set.add(movie)
     return JsonResponse({'message': 'Movie added to actor successfully'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def create_user(request):
+    user_data = JSONParser().parse(request)
+    user_serializer = UserSerializer(data=user_data)
+    if user_serializer.is_valid():
+        user_serializer.save()
+        return JsonResponse(user_serializer.data, status=status.HTTP_201_CREATED)
 
 
 def create_actor(request):
