@@ -1,8 +1,7 @@
 from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
 from .models import Movie, Actor
@@ -67,9 +66,10 @@ class MovieView(APIView):
         movie_serializer = FullMovieSerializer(movie)
         return JsonResponse(movie_serializer.data)
 
-    # def get_permissions(self):
-    #     if self.request.method == 'GET':
-    #         return [AllowAny()]
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
 
 class ActorView(APIView):
@@ -131,8 +131,15 @@ class ActorView(APIView):
         actor_serializer = FullActorSerializer(actor)
         return JsonResponse(actor_serializer.data)
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
 
 class MovieActorsView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, movie_id, actor_id):
         return self.add_actor_to_movie(actor_id, movie_id)
 
@@ -150,6 +157,8 @@ class MovieActorsView(APIView):
 
 
 class ActorMoviesView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, movie_id, actor_id):
         return self.add_movie_to_actor(actor_id, movie_id)
 
