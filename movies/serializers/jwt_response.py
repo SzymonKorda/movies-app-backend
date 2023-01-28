@@ -1,0 +1,9 @@
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super(CustomTokenObtainPairSerializer, self).validate(attrs)
+        data.update({'username': self.user.username})
+        data.update({'is_admin': self.user.is_superuser})
+        return data
