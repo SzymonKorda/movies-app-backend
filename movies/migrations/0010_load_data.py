@@ -13,7 +13,7 @@ def load_data_from_sql(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('movies', '0001_initial'),
+        ('movies', '0009_alter_movie_actors'),
     ]
 
     operations = [
