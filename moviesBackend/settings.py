@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -24,18 +25,21 @@ SECRET_KEY = 'django-insecure-t)t2w#+0occ#a%&fd*x=i8soau!0)k6rm(_%%()#=i)%mp0*x^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+TMDB_KEY = os.environ.get('TMDB_KEY')
+
 ALLOWED_HOSTS = []
 
 # Application definition
 
 INSTALLED_APPS = [
     'movies.apps.MoviesConfig',
+    'corsheaders',
+    'rest_framework',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -120,6 +124,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+DATE_INPUT_FORMATS = ['%Y-%m-%d']
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

@@ -14,4 +14,4 @@ class SimpleMovieSerializer(serializers.ModelSerializer):
     class Meta:
         id = serializers.ReadOnlyField()
         model = Movie
-        fields = ('id', 'title', 'release_year', 'duration', 'description', 'image')
+        fields = ('id', 'title', 'release_date', 'duration', 'description', 'poster_path')

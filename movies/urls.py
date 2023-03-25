@@ -13,4 +13,5 @@ urlpatterns = [
     path('auth/register', views.UserView.as_view()),
     path('auth/login', views.CustomTokenObtainPairView.as_view()),
     path('auth/refresh', jwt_views.TokenRefreshView.as_view()),
+    path('tmdb/movies/<int:movie_id>', views.TmdbView.as_view())
 ]
