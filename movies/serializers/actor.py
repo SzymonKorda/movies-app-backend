@@ -7,8 +7,10 @@ class FullActorSerializer(serializers.ModelSerializer):
     class Meta:
         id = serializers.ReadOnlyField()
         model = Actor
-        # fields = '__all__'
-        fields = ('id', 'name', 'place_of_birth', 'date_of_birth', 'biography', 'poster_path', 'imdb_id')
+        fields = '__all__'
+        # fields = [field.name for field in model._meta.fields]
+        # fields.append('movies')
+        # fields = ('id', 'name', 'place_of_birth', 'date_of_birth', 'biography', 'poster_path', 'imdb_id')
         # extra_fields = ['movies']
 
         # https: // stackoverflow.com / a / 41063577
@@ -25,4 +27,4 @@ class SimpleActorSerializer(serializers.ModelSerializer):
     class Meta:
         id = serializers.ReadOnlyField()
         model = Actor
-        fields = ('id', 'name', 'place_of_birth', 'date_of_birth', 'biography', 'poster_path', 'movies')
+        fields = ('id', 'name', 'place_of_birth', 'date_of_birth', 'biography', 'poster_path')

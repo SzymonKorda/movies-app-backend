@@ -1,4 +1,5 @@
 import datetime
+from enum import Enum
 
 from django.db import models
 
@@ -15,12 +16,14 @@ class Movie(models.Model):
     imdb_path = models.CharField(max_length=50, default='')
     revenue = models.FloatField(default=0.0)
     status = models.CharField(max_length=50, default='')
-    tagline = models.CharField(max_length=500, default='')
+    tagline = models.CharField(max_length=500, default='', blank=True)
     trailer_path = models.CharField(max_length=500, default='')
     director = models.CharField(max_length=50, default='')
 
     genres = models.ManyToManyField('Genre', blank=True)
     actors = models.ManyToManyField('Actor', blank=True)
+
+    # actors = models.ManyToManyField('Actor', blank=True, related_name='movies')
 
     class Meta:
         db_table = "movie"
@@ -43,9 +46,30 @@ class Actor(models.Model):
         unique_together = ('name', 'date_of_birth')
 
 
+class GenreType(Enum):
+    ACTION = 'Action'
+    ADVENTURE = 'Adventure'
+    ANIMATION = 'Animation'
+    COMEDY = 'Comedy'
+    CRIME = 'Crime'
+    DOCUMENTARY = 'Documentary'
+    DRAMA = 'Drama'
+    FAMILY = 'Family'
+    FANTASY = 'Fantasy'
+    HISTORY = 'History'
+    HORROR = 'Horror'
+    MUSIC = 'Music'
+    MYSTERY = 'Mystery'
+    ROMANCE = 'Romance'
+    SCIENCE_FICTION = 'Science Fiction'
+    TV_MOVIE = 'TV Movie'
+    THRILLER = 'Thriller'
+    WAR = 'War'
+    WESTERN = 'Western'
+
+
 class Genre(models.Model):
-    name = models.CharField(max_length=50, default='', unique=True)
+    name = models.CharField(max_length=20, unique=True)
 
     class Meta:
         db_table = "genre"
-
