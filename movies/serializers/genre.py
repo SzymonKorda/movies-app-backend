@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from movies.models import Genre
+
+from movies.models.genre import Genre
 
 
 class FullGenreSerializer(serializers.ModelSerializer):
