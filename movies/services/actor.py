@@ -9,14 +9,13 @@ from rest_framework.parsers import JSONParser
 from movies.models.actor import Actor
 from movies.models.movie import Movie
 from movies.serializers.actor import FullActorSerializer, SimpleActorSerializer
-from movies.services.movie import MovieService
+from movies.serializers.movie import SimpleMovieSerializer
 from movies.services.tmdb import TmdbService
 
 
 class ActorService:
 
     def __init__(self) -> None:
-        self.movie_service = MovieService()
         self.tmdb_service = TmdbService()
         super().__init__()
 
@@ -68,12 +67,12 @@ class ActorService:
             actor = Actor.objects.get(pk=actor_id)
         except Actor.DoesNotExist:
             return JsonResponse({'message': 'Actor does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        serialized_movies = self.movie_service.serialize_to_simple_movie(actor, True)
+        serialized_movies = SimpleMovieSerializer(actor.movie_set.all(), many=True).data
         return JsonResponse({'movies': serialized_movies}, status=status.HTTP_200_OK)
 
     def add_movie_to_actor(self, actor_id, movie_id):
         try:
-            movie = self.movie_service.find_movie(movie_id)
+            movie = Movie.objects.get(pk=movie_id)
         except Movie.DoesNotExist:
             return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
         try:

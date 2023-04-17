@@ -1,16 +1,10 @@
-from django.http import JsonResponse
-from rest_framework import status
-
-from movies.models.genre import Genre, GenreType
-from movies.models.movie import Movie
+from movies.models.genre import Genre
 from movies.serializers.genre import FullGenreSerializer
-from movies.services.movie import MovieService
 
 
 class GenreService:
 
     def __init__(self) -> None:
-        self.movie_service = MovieService()
         super().__init__()
 
     def find_or_create_genre(self, genre_details):

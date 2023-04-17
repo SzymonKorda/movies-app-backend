@@ -1,8 +1,6 @@
-import json
 import os
 from datetime import datetime
 
-import requests
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.parsers import JSONParser
@@ -43,12 +41,12 @@ class MovieService:
 
     def create_movie(self, request):
         movie_id = JSONParser().parse(request)['movie_id']
-        movie_details = self.tmdb_service.fetch_actor(tmdb_uri)
+        movie_details = self.tmdb_service.fetch_movie(movie_id)
         if not (movie_details.get('success', True)):
             return JsonResponse({'message': movie_details['status_message']}, status=status.HTTP_404_NOT_FOUND)
 
-        trailer_path = self.prepare_trailer_path(headers, movie_id, tmdb_uri)
-        movie_credits = self.fetch_movie_credits(headers, movie_id, tmdb_uri)
+        trailer_path = self.prepare_trailer_path(movie_id)
+        movie_credits = self.tmdb_service.fetch_movie_credits(movie_id)
         director = self.prepare_movie_director(movie_credits)
 
         movie = self.prepare_movie(director, movie_details, trailer_path)
@@ -104,24 +102,12 @@ class MovieService:
     def find_movie(self, movie_id):
         return Movie.objects.get(pk=movie_id)
 
-    def serialize_to_simple_movie(self, actor, many):
-        return SimpleMovieSerializer(actor.movie_set.all(), many=many).data
-
-    def fetch_movie(headers, movie_id, tmdb_uri):
-        movie_details_response = requests.get(tmdb_uri + '/movie/' + str(movie_id), headers=headers)
-        return json.loads(movie_details_response.content)
-
-    def prepare_trailer_path(self, headers, movie_id, tmdb_uri):
-        movie_trailer = self.fetch_movie_trailer(headers, movie_id, tmdb_uri)
+    def prepare_trailer_path(self, movie_id):
+        movie_trailer = self.tmdb_service.fetch_movie_trailer(movie_id)
         official_trailers = list(filter(lambda trailer: trailer['official'], movie_trailer['results']))
         trailer_key = official_trailers[0]['key'] if official_trailers else movie_trailer['results'][0]['key']
         trailer_path = 'https://www.youtube.com/watch?v=' + trailer_key
         return trailer_path
-
-    def fetch_movie_trailer(self, headers, movie_id, tmdb_uri):
-        movie_trailer_response = requests.get(tmdb_uri + '/movie/' + str(movie_id) + '/videos', headers=headers)
-        movie_trailer = json.loads(movie_trailer_response.content)
-        return movie_trailer
 
     def prepare_movie(self, director, movie_details, trailer_path):
         return {
@@ -140,10 +126,6 @@ class MovieService:
             'trailer_path': trailer_path,
             'director': director,
         }
-
-    def fetch_movie_credits(self, headers, movie_id, tmdb_uri):
-        movie_credits_response = requests.get(tmdb_uri + '/movie/' + str(movie_id) + '/credits', headers=headers)
-        return json.loads(movie_credits_response.content)
 
     def prepare_movie_director(self, movie_credits):
         return list(filter(lambda member: member['job'] == 'Director', movie_credits['crew']))[0]['name']

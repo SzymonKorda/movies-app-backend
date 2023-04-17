@@ -17,3 +17,16 @@ class TmdbService:
         actor_details = json.loads(actor_details_response.content)
         return actor_details
 
+    def fetch_movie(self, movie_id):
+        movie_details_response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id), headers=self.headers)
+        return json.loads(movie_details_response.content)
+
+    def fetch_movie_trailer(self, movie_id):
+        movie_trailer_response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id) + '/videos', headers=self.headers)
+        movie_trailer = json.loads(movie_trailer_response.content)
+        return movie_trailer
+
+    def fetch_movie_credits(self, movie_id):
+        movie_credits_response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id) + '/credits', headers=self.headers)
+        return json.loads(movie_credits_response.content)
+

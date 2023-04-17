@@ -1,24 +1,7 @@
-import json
-import os
-from datetime import datetime
-
-import requests
 from django.db import transaction
-from django.db.models import Q
-from django.http import JsonResponse
-from rest_framework import status
-from rest_framework.exceptions import ValidationError
-from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from movies.models.actor import Actor
-from movies.models.genre import GenreType, Genre
-from movies.models.movie import Movie
-from movies.serializers.actor import FullActorSerializer, SimpleActorSerializer
-from movies.serializers.genre import FullGenreSerializer
-from movies.serializers.movie import FullMovieSerializer, SimpleMovieSerializer
-from movies.services.movie import MovieService
+from movies.services.movie import *
 
 
 class MovieView(APIView):
