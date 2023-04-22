@@ -30,3 +30,9 @@ class TmdbService:
         movie_credits_response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id) + '/credits', headers=self.headers)
         return json.loads(movie_credits_response.content)
 
+    def movie_search(self, search_query):
+        params = {'query': search_query}
+        search_result_response = requests.get(self.tmdb_uri + '/search/movie', params=params, headers=self.headers)
+        return json.loads(search_result_response.content)['results']
+
+

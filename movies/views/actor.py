@@ -37,10 +37,10 @@ class ActorView(APIView):
     def delete(self, request, actor_id):
         return self.actor_service.delete_actor(actor_id)
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAuthenticated()]
+    # def get_permissions(self):
+    #     if self.request.method == 'GET':
+    #         return [AllowAny()]
+    #     return [IsAuthenticated()]
 
 
 class ActorMoviesView(APIView):

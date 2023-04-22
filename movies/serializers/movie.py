@@ -17,3 +17,10 @@ class SimpleMovieSerializer(serializers.ModelSerializer):
         id = serializers.ReadOnlyField()
         model = Movie
         fields = ('id', 'title', 'release_date', 'duration', 'description', 'poster_path')
+
+
+class SearchMovieSerializer(serializers.ModelSerializer):
+    class Meta:
+        id = serializers.ReadOnlyField()
+        model = Movie
+        fields = ('id', 'title', 'poster_path')

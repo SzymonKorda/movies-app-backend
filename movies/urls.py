@@ -7,6 +7,7 @@ from .views.user import *
 
 urlpatterns = [
     path('movies', MovieView.as_view()),
+    path('movies/search', MovieSearchView.as_view()),
     path('movies/<int:movie_id>', MovieView.as_view()),
     path('movies/<int:movie_id>/actors', MovieActorsView.as_view()),
     path('movies/<int:movie_id>/actors/<int:actor_id>', MovieActorsView.as_view()),

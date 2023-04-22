@@ -10,7 +10,8 @@ class MovieView(APIView):
     def get(self, request, movie_id=None):
         if movie_id:
             return self.movie_service.get_movie(movie_id)
-        return self.movie_service.get_all_movies()
+        search_query = request.GET.get('search', '')
+        return self.movie_service.get_all_movies(search_query)
 
     @transaction.atomic
     def post(self, request):
@@ -52,3 +53,10 @@ class MovieGenresView(APIView):
     def get(self, request, movie_id):
         return self.movie_service.get_movie_genres(movie_id)
 
+
+class MovieSearchView(APIView):
+    movie_service = MovieService()
+
+    def get(self, request):
+        search_query = request.GET.get('query', '')
+        return self.movie_service.movie_admin_search(search_query)

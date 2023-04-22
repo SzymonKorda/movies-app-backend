@@ -79,8 +79,7 @@ class ActorService:
             actor = Actor.objects.get(pk=actor_id)
         except Actor.DoesNotExist:
             return JsonResponse({'message': 'Actor does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        # TODO: actor.movie_set.add(movie)
-        movie.actors.add(actor)
+        actor.movie_set.add(movie)
         return JsonResponse({'message': 'Actor added to movie successfully'}, status=status.HTTP_200_OK)
 
     def prepare_actor(self, actor_details):

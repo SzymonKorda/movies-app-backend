@@ -8,7 +8,7 @@ from rest_framework.parsers import JSONParser
 from movies.models.actor import Actor
 from movies.models.genre import GenreType
 from movies.models.movie import Movie
-from movies.serializers.movie import FullMovieSerializer, SimpleMovieSerializer
+from movies.serializers.movie import FullMovieSerializer, SimpleMovieSerializer, SearchMovieSerializer
 from movies.services.actor import ActorService
 from movies.services.genre import GenreService
 from movies.services.tmdb import TmdbService
@@ -34,8 +34,8 @@ class MovieService:
         movie_serializer = FullMovieSerializer(movie)
         return JsonResponse(movie_serializer.data, status=status.HTTP_200_OK)
 
-    def get_all_movies(self):
-        movies = Movie.objects.all()
+    def get_all_movies(self, search_query):
+        movies = Movie.objects.filter(title__icontains=search_query)
         movies_serializer = SimpleMovieSerializer(movies, many=True)
         return JsonResponse(movies_serializer.data, safe=False)
 
@@ -71,7 +71,7 @@ class MovieService:
                 if genre_details['name'] in GenreType.values():
                     genre, created = self.genre_service.find_or_create_genre(genre_details)
                     movie_genres.append(genre)
-        movie.genres.extend(movie_genres)
+        [movie.genres.add(genre.id) for genre in movie_genres]
 
     def update_movie(self, movie_id, request):
         try:
@@ -132,7 +132,7 @@ class MovieService:
 
     def prepare_movie_actors(self, movie, movie_credits):
         movie_actors = self.actor_service.get_or_create_actors(movie_credits)
-        movie.actors.extend(movie_actors)
+        [movie.actors.add(actor.id) for actor in movie_actors]
 
     def find_movie_genres(self, movie_id):
         try:
@@ -148,7 +148,7 @@ class MovieService:
         except Movie.DoesNotExist:
             return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
         movie_actors = self.actor_service.serialize_to_simple_actor(movie, True)
-        return JsonResponse({'actors': movie_actors.data}, status=status.HTTP_200_OK)
+        return JsonResponse({'actors': movie_actors}, status=status.HTTP_200_OK)
 
     def add_actor_to_movie(self, actor_id, movie_id):
         try:
@@ -161,3 +161,17 @@ class MovieService:
             return JsonResponse({'message': 'Actor does not exist'}, status=status.HTTP_404_NOT_FOUND)
         movie.actors.append(actor)
         return JsonResponse({'message': 'Actor added to movie successfully'}, status=status.HTTP_200_OK)
+
+    def movie_admin_search(self, search_query):
+        search_results = self.tmdb_service.movie_search(search_query)
+        results = [self.preapre_search_movie(result) for result in search_results]
+        return JsonResponse({'results': results}, status=status.HTTP_200_OK)
+
+    def preapre_search_movie(self, result):
+        movie = SearchMovieSerializer(data={
+            'title': result['title'],
+            'poster_path': 'https://image.tmdb.org/t/p/w500' + str(result['poster_path'])
+        })
+        movie.is_valid()
+        return dict(movie.data, id=result['id'])
+
