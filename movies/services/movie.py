@@ -1,14 +1,18 @@
 import os
 from datetime import datetime
+from typing import List
 
-from django.http import JsonResponse
+from django.db.models import QuerySet
+from django.http import JsonResponse, HttpRequest
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.parsers import JSONParser
 
 from movies.models.actor import Actor
 from movies.models.genre import GenreType
 from movies.models.movie import Movie
-from movies.serializers.movie import FullMovieSerializer, SimpleMovieSerializer, SearchMovieSerializer
+from movies.payload.tmdb_movie_response import TmdbMovieResponse
+from movies.serializers.movie import FullMovieSerializer, SearchMovieSerializer
 from movies.services.actor import ActorService
 from movies.services.genre import GenreService
 from movies.services.tmdb import TmdbService
@@ -26,24 +30,20 @@ class MovieService:
         self.genre_service = GenreService()
         super().__init__()
 
-    def get_movie(self, movie_id):
+    def get_movie(self, movie_id: int) -> Movie:
         try:
-            movie = self.find_movie(movie_id)
-        except Movie.DoesNotExist:
-            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        movie_serializer = FullMovieSerializer(movie)
-        return JsonResponse(movie_serializer.data, status=status.HTTP_200_OK)
+            movie: Movie = self.find_movie(movie_id)
+        except Movie.DoesNotExist as ex:
+            raise NotFound(detail={'detail': f'Movie with id {movie_id} does not exist'})
+        return movie
 
-    def get_all_movies(self, search_query):
-        movies = Movie.objects.filter(title__icontains=search_query)
-        movies_serializer = SimpleMovieSerializer(movies, many=True)
-        return JsonResponse(movies_serializer.data, safe=False)
+    def get_all_movies(self, search_query: str) -> List[Movie]:
+        movies: QuerySet[Movie] = Movie.objects.filter(title__icontains=search_query)
+        return list(movies)
 
-    def create_movie(self, request):
-        movie_id = JSONParser().parse(request)['movie_id']
-        movie_details = self.tmdb_service.fetch_movie(movie_id)
-        if not (movie_details.get('success', True)):
-            return JsonResponse({'message': movie_details['status_message']}, status=status.HTTP_404_NOT_FOUND)
+    def create_movie(self, request: HttpRequest):
+        movie_id: int = JSONParser().parse(request)['movie_id']
+        movie_details: TmdbMovieResponse = self.tmdb_service.fetch_movie(movie_id)
 
         trailer_path = self.prepare_trailer_path(movie_id)
         movie_credits = self.tmdb_service.fetch_movie_credits(movie_id)
@@ -73,16 +73,16 @@ class MovieService:
                     movie_genres.append(genre)
         [movie.genres.add(genre.id) for genre in movie_genres]
 
-    def update_movie(self, movie_id, request):
+    def update_movie(self, movie_id: int, request: HttpRequest):
         try:
-            movie = self.find_movie(movie_id)
+            movie: Movie = self.find_movie(movie_id)
         except Movie.DoesNotExist:
-            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        movie_data = JSONParser().parse(request)
-        movie_serializer = FullMovieSerializer(movie, data=movie_data, partial=True)
+            return None
+        movie_data: dict = JSONParser().parse(request)
+        movie_serializer: FullMovieSerializer = FullMovieSerializer(movie, data=movie_data, partial=True)
         if movie_serializer.is_valid():
             movie_serializer.save()
-            return JsonResponse(movie_serializer.data)
+            return Movie(movie_serializer.data)
         return JsonResponse(movie_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete_movie(self, movie_id):
@@ -99,7 +99,7 @@ class MovieService:
     def get_movie_actors(self, movie_id):
         return self.find_movie_actors(movie_id)
 
-    def find_movie(self, movie_id):
+    def find_movie(self, movie_id: int) -> Movie:
         return Movie.objects.get(pk=movie_id)
 
     def prepare_trailer_path(self, movie_id):

@@ -1,24 +1,37 @@
+from typing import Optional, List, Union
+
 from django.db import transaction
+from django.forms.models import model_to_dict
+from django.http import HttpRequest, JsonResponse
+from rest_framework import status
 from rest_framework.views import APIView
 
-from movies.services.movie import *
+from movies.models.movie import Movie
+from movies.serializers.movie import FullMovieSerializer, SimpleMovieSerializer
+from movies.services.movie import MovieService
 
 
+# TODO: ask about ReturnList, ReturnDict and serialized types (serializer.data)
 class MovieView(APIView):
-    movie_service = MovieService()
+    movie_service: MovieService = MovieService()
 
-    def get(self, request, movie_id=None):
+    def get(self, request: HttpRequest, movie_id: Optional[int] = None) -> JsonResponse:
         if movie_id:
-            return self.movie_service.get_movie(movie_id)
-        search_query = request.GET.get('search', '')
-        return self.movie_service.get_all_movies(search_query)
+            movie: Movie = self.movie_service.get_movie(movie_id)
+            return JsonResponse({'data': FullMovieSerializer(movie).data}, status=status.HTTP_200_OK)
+        search_query: str = request.GET.get('search', default='')
+        movies: List[Movie] = self.movie_service.get_all_movies(search_query)
+        return JsonResponse({'data': SimpleMovieSerializer(movies, many=True).data}, status=status.HTTP_200_OK)
 
     @transaction.atomic
-    def post(self, request):
+    def post(self, request: HttpRequest) -> JsonResponse:
         return self.movie_service.create_movie(request)
 
-    def put(self, request, movie_id):
-        return self.movie_service.update_movie(movie_id, request)
+    def put(self, request: HttpRequest, movie_id: int) -> JsonResponse:
+        movie = self.movie_service.update_movie(movie_id, request)
+        if (movie == None):
+            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(movie)
 
     def delete(self, request, movie_id):
         return self.movie_service.delete_movie(movie_id)
