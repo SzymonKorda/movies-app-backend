@@ -1,7 +1,6 @@
-from typing import Optional, List, Union
+from typing import Optional, List
 
 from django.db import transaction
-from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 from rest_framework import status
 from rest_framework.utils.serializer_helpers import ReturnDict
@@ -30,10 +29,8 @@ class MovieView(APIView):
         return JsonResponse({'data': movie}, status=status.HTTP_201_CREATED)
 
     def put(self, request: HttpRequest, movie_id: int) -> JsonResponse:
-        movie = self.movie_service.update_movie(movie_id, request)
-        if (movie == None):
-            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        return JsonResponse(movie)
+        movie: ReturnDict = self.movie_service.update_movie(movie_id, request)
+        return JsonResponse({'data': movie}, status=status.HTTP_200_OK)
 
     def delete(self, request, movie_id):
         return self.movie_service.delete_movie(movie_id)

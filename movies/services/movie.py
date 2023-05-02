@@ -1,7 +1,5 @@
 import os
-from dataclasses import asdict
-from datetime import datetime
-from typing import List, NoReturn, Union
+from typing import List, Union, TypedDict, Dict, Mapping
 
 from django.db.models import QuerySet
 from django.forms.models import model_to_dict
@@ -14,6 +12,7 @@ from rest_framework.utils.serializer_helpers import ReturnDict
 from movies.models.actor import Actor
 from movies.models.genre import Genre
 from movies.models.movie import Movie
+from movies.payload.movie_update_request import MovieUpdateRequest
 from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
 from movies.payload.tmdb_movie_crew_member_response import TmdbMovieCrewMemberResponse
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
@@ -37,11 +36,7 @@ class MovieService:
         super().__init__()
 
     def get_movie(self, movie_id: int) -> Movie:
-        try:
-            movie: Movie = self.find_movie(movie_id)
-        except Movie.DoesNotExist:
-            raise NotFound(detail={'detail': f'Movie with id {movie_id} does not exist'})
-        return movie
+        return self.find_movie(movie_id)
 
     def get_all_movies(self, search_query: str) -> List[Movie]:
         movies: QuerySet[Movie] = Movie.objects.filter(title__icontains=search_query)
@@ -79,23 +74,16 @@ class MovieService:
             movie_genres.append(genre)
         movie.genres.add(*movie_genres)
 
-    def update_movie(self, movie_id: int, request: HttpRequest):
-        try:
-            movie: Movie = self.find_movie(movie_id)
-        except Movie.DoesNotExist:
-            return None
-        movie_data: dict = JSONParser().parse(request)
+    def update_movie(self, movie_id: int, request: HttpRequest) -> ReturnDict:
+        movie: Movie = self.find_movie(movie_id)
+        movie_data: Mapping[str, MovieUpdateRequest] = JSONParser().parse(request)
         movie_serializer: FullMovieSerializer = FullMovieSerializer(movie, data=movie_data, partial=True)
-        if movie_serializer.is_valid():
-            movie_serializer.save()
-            return Movie(movie_serializer.data)
-        return JsonResponse(movie_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        movie_serializer.is_valid(raise_exception=True)
+        movie_serializer.save()
+        return movie_serializer.data
 
     def delete_movie(self, movie_id):
-        try:
-            movie = self.find_movie(movie_id)
-        except Movie.DoesNotExist:
-            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        movie: Movie = self.find_movie(movie_id)
         movie.delete()
         return JsonResponse({'message': 'Movie was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
@@ -106,7 +94,11 @@ class MovieService:
         return self.find_movie_actors(movie_id)
 
     def find_movie(self, movie_id: int) -> Movie:
-        return Movie.objects.get(pk=movie_id)
+        try:
+            movie: Movie = Movie.objects.get(pk=movie_id)
+        except Movie.DoesNotExist:
+            raise NotFound(detail={'detail': f'Movie with id {movie_id} does not exist'})
+        return movie
 
     def prepare_trailer_path(self, movie_id: int) -> str:
         movie_trailers: List[TmdbMovieTrailerResponse] = self.tmdb_service.fetch_movie_trailer(movie_id)
@@ -122,10 +114,7 @@ class MovieService:
         movie.actors.add(*movie_actors)
 
     def find_movie_genres(self, movie_id):
-        try:
-            movie = self.find_movie(movie_id)
-        except Movie.DoesNotExist:
-            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        movie: Movie = self.find_movie(movie_id)
         movie_genres = self.genre_service.serialize_genre(movie, True)
         return JsonResponse({'genres': movie_genres}, status=status.HTTP_200_OK)
 
@@ -138,10 +127,7 @@ class MovieService:
         return JsonResponse({'actors': movie_actors}, status=status.HTTP_200_OK)
 
     def add_actor_to_movie(self, actor_id, movie_id):
-        try:
-            movie = self.find_movie(movie_id)
-        except Movie.DoesNotExist:
-            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        movie: Movie = self.find_movie(movie_id)
         try:
             actor = self.actor_service.find_actor(actor_id)
         except Actor.DoesNotExist:
