@@ -1,13 +1,15 @@
 from datetime import datetime
+from typing import List
 
 from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.parsers import JSONParser
 
 from movies.models.actor import Actor
 from movies.models.movie import Movie
+from movies.payload.tmdb_actor_response import TmdbActorResponse
 from movies.serializers.actor import FullActorSerializer, SimpleActorSerializer
 from movies.serializers.movie import SimpleMovieSerializer
 from movies.services.tmdb import TmdbService
@@ -95,21 +97,28 @@ class ActorService:
     def find_actor(self, actor_id):
         return Actor.objects.get(pk=actor_id)
 
-    def get_or_create_actors(self, movie_credits):
-        actors = movie_credits['cast'][:5]
-        movie_actors = []
-        for actor_data in actors:
-            actor_details = self.tmdb_service.fetch_actor(actor_data['id'])
-            actor = self.prepare_actor(actor_details)
-            actor_serializer = FullActorSerializer(data=actor)
+    def get_or_create_actors(self, cast_members):
+        actor_ids: List[int] = cast_members[:5]
+        movie_actors: List[Actor] = []
+        for actor_id in actor_ids:
+            try:
+                actor_details: TmdbActorResponse = self.tmdb_service.fetch_actor(actor_id)
+            except NotFound:
+                continue
+
+            try:
+                actor = Actor.objects.create_actor(actor_details)
+            except ValidationError:
+                existing_actor: Actor = Actor.objects.get(name=actor_details.name, date_of_birth=actor_details.birthday)
+                movie_actors.append(existing_actor)
+                continue
+            actor_serializer: FullActorSerializer = FullActorSerializer(data=actor)
             try:
                 actor_serializer.is_valid(raise_exception=True)
-                movie_actors.append(actor_serializer.save())
-            except ValidationError as ex:
-                if ex.detail['non_field_errors'][0].code == 'unique':
-                    existing_actor = Actor.objects.filter(
-                        Q(name=actor['name']) & Q(date_of_birth=actor['date_of_birth'])).first()
-                    movie_actors.append(existing_actor)
+            except ValidationError:
+                continue
+            movie_actors.append(existing_actor)
+
         return movie_actors
 
     def find_movie_actors(self, movie_id):

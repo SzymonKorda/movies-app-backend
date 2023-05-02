@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-from typing import List, Dict, Union
-
-from movies.payload.genre_response import GenreResponse
+from typing import List, Union
 
 
 @dataclass
 class TmdbMovieResponse:
+    adult: bool
     backdrop_path: Union[str, None]
     budget: int
     genres: List[str]
@@ -20,6 +19,7 @@ class TmdbMovieResponse:
     tagline: Union[str, None]
 
     def __init__(self, **kwargs) -> None:
+        self.adult = kwargs['adult']
         self.backdrop_path = kwargs['backdrop_path']
         self.budget = kwargs['budget']
         self.genres = [genre['name'] for genre in kwargs['genres']]

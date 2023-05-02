@@ -11,7 +11,10 @@ from rest_framework.parsers import JSONParser
 from movies.models.actor import Actor
 from movies.models.genre import GenreType
 from movies.models.movie import Movie
+from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
+from movies.payload.tmdb_movie_crew_member_response import TmdbMovieCrewMemberResponse
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
+from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
 from movies.serializers.movie import FullMovieSerializer, SearchMovieSerializer
 from movies.services.actor import ActorService
 from movies.services.genre import GenreService
@@ -44,25 +47,17 @@ class MovieService:
     def create_movie(self, request: HttpRequest):
         movie_id: int = JSONParser().parse(request)['movie_id']
         movie_details: TmdbMovieResponse = self.tmdb_service.fetch_movie(movie_id)
-
-        trailer_path = self.prepare_trailer_path(movie_id)
-        movie_credits = self.tmdb_service.fetch_movie_credits(movie_id)
-        director = self.prepare_movie_director(movie_credits)
-
-        movie = self.prepare_movie(director, movie_details, trailer_path)
-        movie_serializer = FullMovieSerializer(data=movie)
-        if movie_serializer.is_valid():
-            movie = movie_serializer.save()
-        else:
-            if 'non_field_errors' in movie_serializer.errors:
-                return JsonResponse({'message': movie_serializer.errors['non_field_errors']},
-                                    status=status.HTTP_409_CONFLICT)
-            else:
-                return JsonResponse({'message': movie_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        self.prepare_movie_actors(movie, movie_credits)
-        self.prepare_movie_genres(movie, movie_details)
-        return JsonResponse(movie_serializer.data, status=status.HTTP_201_CREATED)
+        trailer_path: str = self.prepare_trailer_path(movie_id)
+        movie_credits: TmdbMovieCreditsResponse = self.tmdb_service.fetch_movie_credits(movie_id)
+        director: str = self.prepare_movie_director(movie_credits.crew_members)
+        movie = Movie.objects.create_movie(movie_details, trailer_path, director)
+        # movie_serializer = FullMovieSerializer(data=movie)
+        # if movie_serializer.is_valid(raise_exception=True):
+        #     movie: Movie = movie_serializer.save()
+        # self.prepare_movie_actors(movie, movie_credits.cast_members)
+        # self.prepare_movie_genres(movie, movie_details)
+        # return JsonResponse(movie_serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse({'hehe': 'hehe'}, status=status.HTTP_201_CREATED)
 
     def prepare_movie_genres(self, movie, movie_details):
         movie_genres = []
@@ -102,36 +97,17 @@ class MovieService:
     def find_movie(self, movie_id: int) -> Movie:
         return Movie.objects.get(pk=movie_id)
 
-    def prepare_trailer_path(self, movie_id):
-        movie_trailer = self.tmdb_service.fetch_movie_trailer(movie_id)
-        official_trailers = list(filter(lambda trailer: trailer['official'], movie_trailer['results']))
-        trailer_key = official_trailers[0]['key'] if official_trailers else movie_trailer['results'][0]['key']
-        trailer_path = 'https://www.youtube.com/watch?v=' + trailer_key
-        return trailer_path
+    def prepare_trailer_path(self, movie_id: int) -> str:
+        movie_trailers: List[TmdbMovieTrailerResponse] = self.tmdb_service.fetch_movie_trailer(movie_id)
+        official_trailers: List[TmdbMovieTrailerResponse] = [trailer for trailer in movie_trailers if trailer.official]
+        trailer_key: str = official_trailers[0].key if official_trailers else movie_trailers[0].key
+        return 'https://www.youtube.com/watch?v=' + trailer_key
 
-    def prepare_movie(self, director, movie_details, trailer_path):
-        return {
-            'title': movie_details['original_title'],
-            'description': movie_details['overview'],
-            'box_office': movie_details['budget'],
-            'duration': movie_details['runtime'],
-            'release_date': datetime.strptime(movie_details['release_date'], '%Y-%m-%d').date(),
-            'poster_path': 'https://image.tmdb.org/t/p/w500' + movie_details['poster_path'],
-            'backdrop_path': 'https://image.tmdb.org/t/p/w500' + movie_details['backdrop_path'],
-            'adult': movie_details['adult'],
-            'imdb_path': 'https://www.imdb.com/title/' + movie_details['imdb_id'],
-            'revenue': movie_details['revenue'],
-            'status': movie_details['status'],
-            'tagline': movie_details['tagline'],
-            'trailer_path': trailer_path,
-            'director': director,
-        }
+    def prepare_movie_director(self, crew_members: List[TmdbMovieCrewMemberResponse]) -> str:
+        return next(member.name for member in crew_members if member.job == 'Director')
 
-    def prepare_movie_director(self, movie_credits):
-        return list(filter(lambda member: member['job'] == 'Director', movie_credits['crew']))[0]['name']
-
-    def prepare_movie_actors(self, movie, movie_credits):
-        movie_actors = self.actor_service.get_or_create_actors(movie_credits)
+    def prepare_movie_actors(self, movie: Movie, cast_members: List[int]):
+        movie_actors = self.actor_service.get_or_create_actors(cast_members)
         [movie.actors.add(actor.id) for actor in movie_actors]
 
     def find_movie_genres(self, movie_id):

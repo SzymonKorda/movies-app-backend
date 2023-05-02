@@ -1,11 +1,13 @@
 import json
 import os
-from typing import List
+from typing import List, Union, Dict, Any
 
 import requests
 from requests import Response
 from rest_framework.exceptions import APIException, NotFound
 
+from movies.payload.tmdb_actor_response import TmdbActorResponse
+from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
 from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
 
@@ -18,28 +20,27 @@ class TmdbService:
         self.headers = {'Authorization': 'Bearer ' + self.tmdb_key}
         super().__init__()
 
-    def fetch_actor(self, actor_id):
-        actor_details_response = requests.get(self.tmdb_uri + '/person/' + str(actor_id), headers=self.headers)
-        actor_details = json.loads(actor_details_response.content)
-        return actor_details
+    def fetch_actor(self, actor_id: int) -> TmdbActorResponse:
+        response: Response = requests.get(self.tmdb_uri + '/person/' + str(actor_id), headers=self.headers)
+        if response.status_code == 404:
+            raise NotFound(detail={'detail': f'Tmdb actor with id {actor_id} not found'})
+        return TmdbActorResponse(**json.loads(response.content))
 
     def fetch_movie(self, movie_id: int) -> TmdbMovieResponse:
         response: Response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id), headers=self.headers)
-        content: dict = json.loads(response.content)
         if response.status_code == 404:
-            raise NotFound(detail={'detail': content['status_message']})
-        return TmdbMovieResponse(**content)
+            raise NotFound(detail={'detail': f'Tmdb movie with id {movie_id} not found'})
+        return TmdbMovieResponse(**json.loads(response.content))
 
     def fetch_movie_trailer(self, movie_id) -> List[TmdbMovieTrailerResponse]:
-        movie_trailer_response: Response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id) + '/videos',
-                                                        headers=self.headers)
-        movie_trailers: dict = json.loads(movie_trailer_response.content)
+        response: Response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id) + '/videos', headers=self.headers)
+        movie_trailers: Dict[str, Any] = json.loads(response.content)
         return [TmdbMovieTrailerResponse(**trailer) for trailer in movie_trailers['results']]
 
-    def fetch_movie_credits(self, movie_id):
-        movie_credits_response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id) + '/credits',
-                                              headers=self.headers)
-        return json.loads(movie_credits_response.content)
+    def fetch_movie_credits(self, movie_id: int) -> TmdbMovieCreditsResponse:
+        response: Response = requests.get(self.tmdb_uri + '/movie/' + str(movie_id) + '/credits', headers=self.headers)
+        content: Dict[str, Any] = json.loads(response.content)
+        return TmdbMovieCreditsResponse(**content)
 
     def movie_search(self, search_query):
         params = {'query': search_query}
