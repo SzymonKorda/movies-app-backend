@@ -17,7 +17,7 @@ class TmdbService:
     def __init__(self) -> None:
         self.tmdb_key = os.getenv('TMDB_KEY')
         self.tmdb_uri = 'https://api.themoviedb.org/3'
-        self.headers = {'Authorization': 'Bearer ' + self.tmdb_key}
+        self.headers = {'Authorization': 'Bearer ' + self.tmdb_key} if self.tmdb_key else None
         super().__init__()
 
     def fetch_actor(self, actor_id: int) -> TmdbActorResponse:

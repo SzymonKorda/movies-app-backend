@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
 from django.db.models import Q
+from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.exceptions import ValidationError, NotFound, ErrorDetail
 from rest_framework.parsers import JSONParser
 
 from movies.models.actor import Actor
@@ -97,7 +98,7 @@ class ActorService:
     def find_actor(self, actor_id):
         return Actor.objects.get(pk=actor_id)
 
-    def get_or_create_actors(self, cast_members):
+    def get_or_create_actors(self, cast_members: List[int]) -> List[Actor]:
         actor_ids: List[int] = cast_members[:5]
         movie_actors: List[Actor] = []
         for actor_id in actor_ids:
@@ -106,18 +107,22 @@ class ActorService:
             except NotFound:
                 continue
 
-            try:
-                actor = Actor.objects.create_actor(actor_details)
-            except ValidationError:
-                existing_actor: Actor = Actor.objects.get(name=actor_details.name, date_of_birth=actor_details.birthday)
-                movie_actors.append(existing_actor)
-                continue
-            actor_serializer: FullActorSerializer = FullActorSerializer(data=actor)
+            actor: Actor = Actor.from_response(actor_details)
+            actor_serializer: FullActorSerializer = FullActorSerializer(data=model_to_dict(actor))
             try:
                 actor_serializer.is_valid(raise_exception=True)
-            except ValidationError:
-                continue
-            movie_actors.append(existing_actor)
+            except ValidationError as ex:
+                non_field_errors_key: Union[ErrorDetail, None] = ex.args[0]['non_field_errors'][0] \
+                    if 'non_field_errors' in ex.args[0] else None
+                if non_field_errors_key and non_field_errors_key.code == 'unique':
+                    existing_actor: Actor = Actor.objects.get(name=actor_details.name,
+                                                              date_of_birth=actor_details.birthday)
+                    movie_actors.append(existing_actor)
+                    continue
+                else:
+                    continue
+            actor = actor_serializer.save()
+            movie_actors.append(actor)
 
         return movie_actors
 

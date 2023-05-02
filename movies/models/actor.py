@@ -1,29 +1,11 @@
 from datetime import date, datetime
+from typing import Union
 
-from django.db import models, IntegrityError
-from rest_framework.exceptions import ValidationError
+from django.db import models
 
 from movies.payload.tmdb_actor_response import TmdbActorResponse
 
-
-class ActorManager(models.Manager['Actor']):
-    def create_actor(self, actor_details: TmdbActorResponse):
-        name: str = actor_details.name
-        biography: str = actor_details.biography
-        place_of_birth: str = actor_details.place_of_birth
-        date_of_birth: date = datetime.strptime(actor_details.birthday, '%Y-%m-%d').date()
-        imdb_id: str = actor_details.imdb_id
-        poster_path: str = self.prepare_poster_path(actor_details.profile_path)
-        try:
-            actor: Actor = self.create(name=name, biography=biography, place_of_birth=place_of_birth,
-                                       date_of_birth=date_of_birth, imdb_id=imdb_id, poster_path=poster_path)
-        except IntegrityError:
-            raise ValidationError(
-                detail=f'Actor with given name and date of birth ({name}, {date_of_birth}) already exists')
-        return actor
-
-    def prepare_poster_path(self, resource_key: str):
-        return 'https://image.tmdb.org/t/p/w500' + resource_key if resource_key else None
+IMDB_MOVIE_URI = 'https://www.imdb.com/title/'
 
 
 class Actor(models.Model):
@@ -31,11 +13,25 @@ class Actor(models.Model):
     biography = models.CharField(max_length=5000, default='')
     place_of_birth = models.CharField(max_length=50, default='')
     date_of_birth = models.DateField(default=date.today)
-    imdb_id = models.CharField(max_length=50, default='')
+    imdb_path = models.CharField(max_length=50, default='')
     poster_path = models.CharField(max_length=500, default='')
-
-    objects = ActorManager()
 
     class Meta:
         db_table = "actor"
         unique_together = ('name', 'date_of_birth')
+
+    @classmethod
+    def from_response(cls, actor_details: TmdbActorResponse):
+        name: str = actor_details.name
+        biography: str = actor_details.biography
+        place_of_birth: Union[str, None] = actor_details.place_of_birth
+        birthday: Union[str, None] = actor_details.birthday
+        date_of_birth: Union[date, None] = datetime.strptime(birthday, '%Y-%m-%d').date() if birthday else None
+        imdb_path: str = actor_details.imdb_id
+        poster_path: Union[str, None] = cls.prepare_resource_path(IMDB_MOVIE_URI, actor_details.profile_path)
+        return cls(name=name, biography=biography, place_of_birth=place_of_birth,
+                   date_of_birth=date_of_birth, imdb_path=imdb_path, poster_path=poster_path)
+
+    @staticmethod
+    def prepare_resource_path(resource_uri: str, resource_key: Union[str, None]) -> Union[str, None]:
+        return resource_uri + resource_key if resource_key else None

@@ -4,6 +4,7 @@ from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 from rest_framework import status
+from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
 from movies.models.movie import Movie
@@ -25,7 +26,8 @@ class MovieView(APIView):
 
     @transaction.atomic
     def post(self, request: HttpRequest) -> JsonResponse:
-        return self.movie_service.create_movie(request)
+        movie: ReturnDict = self.movie_service.create_movie(request)
+        return JsonResponse({'data': movie}, status=status.HTTP_201_CREATED)
 
     def put(self, request: HttpRequest, movie_id: int) -> JsonResponse:
         movie = self.movie_service.update_movie(movie_id, request)
