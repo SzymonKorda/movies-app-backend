@@ -32,8 +32,9 @@ class MovieView(APIView):
         movie: ReturnDict = self.movie_service.update_movie(movie_id, request)
         return JsonResponse({'data': movie}, status=status.HTTP_200_OK)
 
-    def delete(self, request, movie_id):
-        return self.movie_service.delete_movie(movie_id)
+    def delete(self, request: HttpRequest, movie_id: int) -> JsonResponse:
+        self.movie_service.delete_movie(movie_id)
+        return JsonResponse({'message': 'Movie was deleted successfully!'}, status=status.HTTP_200_OK)
 
     # def get_permissions(self):
     #     if self.request.method == 'GET':
@@ -48,11 +49,13 @@ class MovieActorsView(APIView):
 
     # permission_classes = [IsAuthenticated]
 
-    def get(self, request, movie_id):
-        return self.movie_service.get_movie_actors(movie_id)
+    def get(self, request: HttpRequest, movie_id: int) -> JsonResponse:
+        movie_actors: ReturnDict = self.movie_service.get_movie_actors(movie_id)
+        return JsonResponse({'data': movie_actors}, status=status.HTTP_200_OK)
 
-    def post(self, request, movie_id, actor_id):
-        return self.movie_service.add_actor_to_movie(actor_id, movie_id)
+    def post(self, request: HttpRequest, movie_id: int, actor_id: int) -> JsonResponse:
+        self.movie_service.add_actor_to_movie(actor_id, movie_id)
+        return JsonResponse({'message': 'Actor added to movie successfully'}, status=status.HTTP_200_OK)
 
 
 class MovieGenresView(APIView):
@@ -62,13 +65,15 @@ class MovieGenresView(APIView):
 
     # permission_classes = [IsAuthenticated]
 
-    def get(self, request, movie_id):
-        return self.movie_service.get_movie_genres(movie_id)
+    def get(self, request: HttpRequest, movie_id: int) -> JsonResponse:
+        movie_genres: ReturnDict = self.movie_service.get_movie_genres(movie_id)
+        return JsonResponse({'data': movie_genres}, status=status.HTTP_200_OK)
 
 
 class MovieSearchView(APIView):
     movie_service = MovieService()
 
-    def get(self, request):
-        search_query = request.GET.get('query', '')
-        return self.movie_service.movie_admin_search(search_query)
+    def get(self, request: HttpRequest) -> JsonResponse:
+        search_query: str = request.GET.get('query', default='')
+        movies: ReturnDict = self.movie_service.movie_admin_search(search_query)
+        return JsonResponse({'data': movies}, status=status.HTTP_200_OK)

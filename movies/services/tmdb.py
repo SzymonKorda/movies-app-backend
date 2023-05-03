@@ -9,6 +9,7 @@ from rest_framework.exceptions import APIException, NotFound
 from movies.payload.tmdb_actor_response import TmdbActorResponse
 from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
+from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
 
 
@@ -42,7 +43,7 @@ class TmdbService:
         content: Dict[str, Any] = json.loads(response.content)
         return TmdbMovieCreditsResponse(**content)
 
-    def movie_search(self, search_query):
-        params = {'query': search_query}
-        search_result_response = requests.get(self.tmdb_uri + '/search/movie', params=params, headers=self.headers)
-        return json.loads(search_result_response.content)['results']
+    def movie_search(self, search_query) -> List[TmdbMovieSearchResponse]:
+        params: Dict[str, str] = {'query': search_query}
+        response: Response = requests.get(self.tmdb_uri + '/search/movie', params=params, headers=self.headers)
+        return [TmdbMovieSearchResponse(**movie) for movie in json.loads(response.content)['results']]

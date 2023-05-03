@@ -1,19 +1,10 @@
-from datetime import datetime
-import json
-import os
+from typing import Optional
 
-import requests
-from django.db import connection
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from rest_framework import status
-from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
-from movies.models.actor import Actor
-from movies.models.movie import Movie
-from movies.serializers.actor import SimpleActorSerializer, FullActorSerializer
-from movies.serializers.movie import SimpleMovieSerializer
 from movies.services.actor import ActorService
 
 
@@ -23,19 +14,24 @@ class ActorView(APIView):
         self.actor_service = ActorService()
         super().__init__(*args, **kwargs)
 
-    def get(self, request, actor_id=None):
+    def get(self, request: HttpRequest, actor_id: Optional[int] = None) -> JsonResponse:
         if actor_id:
-            return self.actor_service.get_actor(actor_id)
-        return self.actor_service.get_all_actors()
+            actor: ReturnDict = self.actor_service.get_actor(actor_id)
+            return JsonResponse({'data': actor}, status=status.HTTP_200_OK)
+        actors: ReturnDict = self.actor_service.get_all_actors()
+        return JsonResponse({'data': actors}, status=status.HTTP_200_OK)
 
-    def post(self, request):
-        return self.actor_service.create_actor(request)
+    def post(self, request: HttpRequest) -> JsonResponse:
+        actor: ReturnDict = self.actor_service.create_actor(request)
+        return JsonResponse({'data': actor}, status=status.HTTP_201_CREATED)
 
-    def put(self, request, actor_id):
-        return self.actor_service.update_actor(actor_id, request)
+    def put(self, request: HttpRequest, actor_id: int) -> JsonResponse:
+        actor: ReturnDict = self.actor_service.update_actor(actor_id, request)
+        return JsonResponse({'data': actor}, status=status.HTTP_200_OK)
 
-    def delete(self, request, actor_id):
-        return self.actor_service.delete_actor(actor_id)
+    def delete(self, request: HttpRequest, actor_id: int) -> JsonResponse:
+        self.actor_service.delete_actor(actor_id)
+        return JsonResponse({'message': 'Actor was deleted successfully!'}, status=status.HTTP_200_OK)
 
     # def get_permissions(self):
     #     if self.request.method == 'GET':
@@ -51,8 +47,10 @@ class ActorMoviesView(APIView):
 
     # permission_classes = [IsAuthenticated]
 
-    def get(self, request, actor_id):
-        return self.actor_service.get_movies_from_actor(actor_id)
+    def get(self, request: HttpRequest, actor_id: int):
+        movies: ReturnDict = self.actor_service.get_movies_from_actor(actor_id)
+        return JsonResponse({'data': movies}, status=status.HTTP_200_OK)
 
-    def post(self, request, movie_id, actor_id):
-        return self.actor_service.add_movie_to_actor(actor_id, movie_id)
+    def post(self, request: HttpRequest, movie_id: int, actor_id: int) -> JsonResponse:
+        self.actor_service.add_movie_to_actor(actor_id, movie_id)
+        return JsonResponse({'message': 'Actor added to movie successfully'}, status=status.HTTP_200_OK)

@@ -1,10 +1,9 @@
 import os
-from typing import List, Union, TypedDict, Dict, Mapping
+from typing import List, Union, Mapping
 
 from django.db.models import QuerySet
 from django.forms.models import model_to_dict
-from django.http import JsonResponse, HttpRequest
-from rest_framework import status
+from django.http import HttpRequest
 from rest_framework.exceptions import NotFound, ValidationError, ErrorDetail
 from rest_framework.parsers import JSONParser
 from rest_framework.utils.serializer_helpers import ReturnDict
@@ -16,6 +15,7 @@ from movies.payload.movie_update_request import MovieUpdateRequest
 from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
 from movies.payload.tmdb_movie_crew_member_response import TmdbMovieCrewMemberResponse
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
+from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
 from movies.serializers.movie import FullMovieSerializer, SearchMovieSerializer
 from movies.services.actor import ActorService
@@ -82,16 +82,17 @@ class MovieService:
         movie_serializer.save()
         return movie_serializer.data
 
-    def delete_movie(self, movie_id):
+    def delete_movie(self, movie_id) -> None:
         movie: Movie = self.find_movie(movie_id)
         movie.delete()
-        return JsonResponse({'message': 'Movie was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
-    def get_movie_genres(self, movie_id):
-        return self.find_movie_genres(movie_id)
+    def get_movie_genres(self, movie_id: int) -> ReturnDict:
+        movie: Movie = self.find_movie(movie_id)
+        return self.genre_service.serialize_genres(movie)
 
-    def get_movie_actors(self, movie_id):
-        return self.find_movie_actors(movie_id)
+    def get_movie_actors(self, movie_id: int) -> ReturnDict:
+        movie: Movie = self.find_movie(movie_id)
+        return self.actor_service.serialize_to_simple_actors(movie)
 
     def find_movie(self, movie_id: int) -> Movie:
         try:
@@ -113,37 +114,13 @@ class MovieService:
         movie_actors: List[Actor] = self.actor_service.get_or_create_actors(cast_members)
         movie.actors.add(*movie_actors)
 
-    def find_movie_genres(self, movie_id):
+    def add_actor_to_movie(self, actor_id: int, movie_id: int) -> None:
         movie: Movie = self.find_movie(movie_id)
-        movie_genres = self.genre_service.serialize_genre(movie, True)
-        return JsonResponse({'genres': movie_genres}, status=status.HTTP_200_OK)
+        actor: Actor = self.actor_service.find_actor(actor_id)
+        movie.actors.add(actor)
 
-    def find_movie_actors(self, movie_id):
-        try:
-            movie = Movie.objects.get(pk=movie_id)
-        except Movie.DoesNotExist:
-            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        movie_actors = self.actor_service.serialize_to_simple_actor(movie, True)
-        return JsonResponse({'actors': movie_actors}, status=status.HTTP_200_OK)
-
-    def add_actor_to_movie(self, actor_id, movie_id):
-        movie: Movie = self.find_movie(movie_id)
-        try:
-            actor = self.actor_service.find_actor(actor_id)
-        except Actor.DoesNotExist:
-            return JsonResponse({'message': 'Actor does not exist'}, status=status.HTTP_404_NOT_FOUND)
-        movie.actors.append(actor)
-        return JsonResponse({'message': 'Actor added to movie successfully'}, status=status.HTTP_200_OK)
-
-    def movie_admin_search(self, search_query):
-        search_results = self.tmdb_service.movie_search(search_query)
-        results = [self.preapre_search_movie(result) for result in search_results]
-        return JsonResponse({'results': results}, status=status.HTTP_200_OK)
-
-    def preapre_search_movie(self, result):
-        movie = SearchMovieSerializer(data={
-            'title': result['title'],
-            'poster_path': 'https://image.tmdb.org/t/p/w500' + str(result['poster_path'])
-        })
-        movie.is_valid()
-        return dict(movie.data, id=result['id'])
+    def movie_admin_search(self, search_query: str) -> ReturnDict:
+        search_results: List[TmdbMovieSearchResponse] = self.tmdb_service.movie_search(search_query)
+        movie_serializer: SearchMovieSerializer = SearchMovieSerializer(data=search_results, many=True)
+        movie_serializer.is_valid()
+        return movie_serializer.data
