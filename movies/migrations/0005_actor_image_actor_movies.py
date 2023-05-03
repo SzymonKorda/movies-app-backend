@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('movies', '0004_alter_movie_description'),
+        ("movies", "0004_alter_movie_description"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='actor',
-            name='image',
-            field=models.CharField(default='', max_length=500),
+            model_name="actor",
+            name="image",
+            field=models.CharField(default="", max_length=500),
         ),
         migrations.AddField(
-            model_name='actor',
-            name='movies',
-            field=models.ManyToManyField(blank=True, to='movies.movie'),
+            model_name="actor",
+            name="movies",
+            field=models.ManyToManyField(blank=True, to="movies.movie"),
         ),
     ]

@@ -4,41 +4,55 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Actor',
+            name="Actor",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('first_name', models.CharField(max_length=50)),
-                ('last_name', models.CharField(max_length=50)),
-                ('description', models.CharField(max_length=200)),
-                ('born_place', models.CharField(max_length=50)),
-                ('born_year', models.IntegerField()),
-                ('height', models.IntegerField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("first_name", models.CharField(max_length=50)),
+                ("last_name", models.CharField(max_length=50)),
+                ("description", models.CharField(max_length=200)),
+                ("born_place", models.CharField(max_length=50)),
+                ("born_year", models.IntegerField()),
+                ("height", models.IntegerField()),
             ],
             options={
-                'db_table': 'actor',
+                "db_table": "actor",
             },
         ),
         migrations.CreateModel(
-            name='Movie',
+            name="Movie",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=50)),
-                ('description', models.CharField(max_length=200)),
-                ('box_office', models.FloatField()),
-                ('duration', models.IntegerField()),
-                ('release_year', models.IntegerField()),
-                ('actors', models.ManyToManyField(to='movies.actor')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=50)),
+                ("description", models.CharField(max_length=200)),
+                ("box_office", models.FloatField()),
+                ("duration", models.IntegerField()),
+                ("release_year", models.IntegerField()),
+                ("actors", models.ManyToManyField(to="movies.actor")),
             ],
             options={
-                'db_table': 'movie',
+                "db_table": "movie",
             },
         ),
     ]

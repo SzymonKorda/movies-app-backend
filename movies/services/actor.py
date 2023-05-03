@@ -18,7 +18,6 @@ from movies.services.tmdb import TmdbService
 
 
 class ActorService:
-
     def __init__(self) -> None:
         self.tmdb_service = TmdbService()
         super().__init__()
@@ -29,14 +28,18 @@ class ActorService:
 
     def get_all_actors(self) -> ReturnDict:
         actors: QuerySet[Actor] = Actor.objects.all()
-        actor_serializer: SimpleActorSerializer = SimpleActorSerializer(actors, many=True)
+        actor_serializer: SimpleActorSerializer = SimpleActorSerializer(
+            actors, many=True
+        )
         return actor_serializer.data
 
     def create_actor(self, request: HttpRequest) -> ReturnDict:
-        actor_id: int = JSONParser().parse(request)['actor_id']
+        actor_id: int = JSONParser().parse(request)["actor_id"]
         actor_details: TmdbActorResponse = self.tmdb_service.fetch_actor(actor_id)
         actor: Actor = Actor.from_response(actor_details)
-        actor_serializer: FullActorSerializer = FullActorSerializer(data=model_to_dict(actor))
+        actor_serializer: FullActorSerializer = FullActorSerializer(
+            data=model_to_dict(actor)
+        )
         actor_serializer.is_valid(raise_exception=True)
         actor_serializer.save()
         return actor_serializer.data
@@ -44,7 +47,9 @@ class ActorService:
     def update_actor(self, actor_id: int, request: HttpRequest) -> ReturnDict:
         actor: Actor = self.find_actor(actor_id)
         actor_data: Mapping[str, ActorUpdateRequest] = JSONParser().parse(request)
-        actor_serializer: FullActorSerializer = FullActorSerializer(actor, data=actor_data, partial=True)
+        actor_serializer: FullActorSerializer = FullActorSerializer(
+            actor, data=actor_data, partial=True
+        )
         actor_serializer.is_valid(raise_exception=True)
         actor_serializer.save()
         return actor_serializer.data
@@ -62,7 +67,9 @@ class ActorService:
         try:
             movie: Movie = Movie.objects.get(pk=movie_id)
         except Movie.DoesNotExist:
-            raise NotFound(detail={'detail': f'Movie with id {movie_id} does not exist'})
+            raise NotFound(
+                detail={"detail": f"Movie with id {movie_id} does not exist"}
+            )
         actor: Any = self.find_actor(actor_id)
         actor.movie_set.add(movie)
 
@@ -70,7 +77,9 @@ class ActorService:
         try:
             actor: Actor = Actor.objects.get(pk=actor_id)
         except Actor.DoesNotExist:
-            raise NotFound(detail={'detail': f'Actor with id {actor_id} does not exist'})
+            raise NotFound(
+                detail={"detail": f"Actor with id {actor_id} does not exist"}
+            )
         return actor
 
     def get_or_create_actors(self, cast_members: List[int]) -> List[Actor]:
@@ -78,19 +87,27 @@ class ActorService:
         movie_actors: List[Actor] = []
         for actor_id in actor_ids:
             try:
-                actor_details: TmdbActorResponse = self.tmdb_service.fetch_actor(actor_id)
+                actor_details: TmdbActorResponse = self.tmdb_service.fetch_actor(
+                    actor_id
+                )
             except NotFound:
                 continue
             actor: Actor = Actor.from_response(actor_details)
-            actor_serializer: FullActorSerializer = FullActorSerializer(data=model_to_dict(actor))
+            actor_serializer: FullActorSerializer = FullActorSerializer(
+                data=model_to_dict(actor)
+            )
             try:
                 actor_serializer.is_valid(raise_exception=True)
             except ValidationError as ex:
-                non_field_errors_key: Union[ErrorDetail, None] = ex.args[0]['non_field_errors'][0] \
-                    if 'non_field_errors' in ex.args[0] else None
-                if non_field_errors_key and non_field_errors_key.code == 'unique':
-                    existing_actor: Actor = Actor.objects.get(name=actor_details.name,
-                                                              date_of_birth=actor_details.birthday)
+                non_field_errors_key: Union[ErrorDetail, None] = (
+                    ex.args[0]["non_field_errors"][0]
+                    if "non_field_errors" in ex.args[0]
+                    else None
+                )
+                if non_field_errors_key and non_field_errors_key.code == "unique":
+                    existing_actor: Actor = Actor.objects.get(
+                        name=actor_details.name, date_of_birth=actor_details.birthday
+                    )
                     movie_actors.append(existing_actor)
                     continue
                 else:
@@ -104,9 +121,13 @@ class ActorService:
         try:
             movie = Movie.objects.get(pk=movie_id)
         except Movie.DoesNotExist:
-            return JsonResponse({'message': 'Movie does not exist'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse(
+                {"message": "Movie does not exist"}, status=status.HTTP_404_NOT_FOUND
+            )
         actor_serializer = SimpleActorSerializer(movie.actors.all(), many=True)
-        return JsonResponse({'actors': actor_serializer.data}, status=status.HTTP_200_OK)
+        return JsonResponse(
+            {"actors": actor_serializer.data}, status=status.HTTP_200_OK
+        )
 
     def serialize_to_simple_actors(self, movie: Movie) -> ReturnDict:
         return SimpleActorSerializer(movie.actors.all(), many=True).data

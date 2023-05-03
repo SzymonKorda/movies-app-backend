@@ -7,6 +7,5 @@ class UserCreateRequest:
     password: str
 
     def __init__(self, **kwargs) -> None:
-        self.username = kwargs['username']
-        self.password = kwargs['password']
-
+        self.username = kwargs["username"]
+        self.password = kwargs["password"]

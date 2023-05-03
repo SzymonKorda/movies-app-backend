@@ -8,7 +8,6 @@ class TmdbMovieTrailerResponse:
     official: bool
 
     def __init__(self, **kwargs) -> None:
-        self.site = kwargs['site']
-        self.key = kwargs['key']
-        self.official = kwargs['official']
-
+        self.site = kwargs["site"]
+        self.key = kwargs["key"]
+        self.official = kwargs["official"]

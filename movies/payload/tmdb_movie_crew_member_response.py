@@ -3,5 +3,5 @@ class TmdbMovieCrewMemberResponse:
     job: str
 
     def __init__(self, **kwargs) -> None:
-        self.name = kwargs['name']
-        self.job = kwargs['job']
+        self.name = kwargs["name"]
+        self.job = kwargs["job"]

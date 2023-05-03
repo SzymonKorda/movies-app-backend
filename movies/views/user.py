@@ -15,7 +15,7 @@ from movies.serializers.user import UserSerializer
 class UserView(APIView):
     def post(self, request: HttpRequest) -> JsonResponse:
         user: ReturnDict = self.create_user(request)
-        return JsonResponse({'data': user}, status=status.HTTP_201_CREATED)
+        return JsonResponse({"data": user}, status=status.HTTP_201_CREATED)
 
     def create_user(self, request: HttpRequest) -> ReturnDict:
         user_data: Dict[str, UserCreateRequest] = JSONParser().parse(request)

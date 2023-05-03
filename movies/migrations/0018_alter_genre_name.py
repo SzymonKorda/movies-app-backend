@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('movies', '0017_alter_genre_name'),
+        ("movies", "0017_alter_genre_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='genre',
-            name='name',
+            model_name="genre",
+            name="name",
             field=models.CharField(max_length=20, unique=True),
         ),
     ]

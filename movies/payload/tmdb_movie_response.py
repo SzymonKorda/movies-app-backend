@@ -19,22 +19,16 @@ class TmdbMovieResponse:
     tagline: Union[str, None]
 
     def __init__(self, **kwargs) -> None:
-        self.adult = kwargs['adult']
-        self.backdrop_path = kwargs['backdrop_path']
-        self.budget = kwargs['budget']
-        self.genres = [genre['name'] for genre in kwargs['genres']]
-        self.imdb_id = kwargs['imdb_id']
-        self.original_title = kwargs['original_title']
-        self.overview = kwargs['overview']
-        self.poster_path = kwargs['poster_path']
-        self.release_date = kwargs['release_date']
-        self.revenue = kwargs['revenue']
-        self.runtime = kwargs['runtime']
-        self.status = kwargs['status']
-        self.tagline = kwargs['tagline']
-
-
-
-
-
-
+        self.adult = kwargs["adult"]
+        self.backdrop_path = kwargs["backdrop_path"]
+        self.budget = kwargs["budget"]
+        self.genres = [genre["name"] for genre in kwargs["genres"]]
+        self.imdb_id = kwargs["imdb_id"]
+        self.original_title = kwargs["original_title"]
+        self.overview = kwargs["overview"]
+        self.poster_path = kwargs["poster_path"]
+        self.release_date = kwargs["release_date"]
+        self.revenue = kwargs["revenue"]
+        self.runtime = kwargs["runtime"]
+        self.status = kwargs["status"]
+        self.tagline = kwargs["tagline"]

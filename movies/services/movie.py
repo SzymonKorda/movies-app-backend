@@ -22,13 +22,12 @@ from movies.services.actor import ActorService
 from movies.services.genre import GenreService
 from movies.services.tmdb import TmdbService
 
-tmdb_key = os.getenv('TMDB_KEY')
-tmdb_uri = 'https://api.themoviedb.org/3'
-headers = {'Authorization': 'Bearer ' + tmdb_key} if tmdb_key else None
+tmdb_key = os.getenv("TMDB_KEY")
+tmdb_uri = "https://api.themoviedb.org/3"
+headers = {"Authorization": "Bearer " + tmdb_key} if tmdb_key else None
 
 
 class MovieService:
-
     def __init__(self) -> None:
         self.actor_service = ActorService()
         self.tmdb_service = TmdbService()
@@ -43,21 +42,26 @@ class MovieService:
         return list(movies)
 
     def create_movie(self, request: HttpRequest) -> ReturnDict:
-        movie_id: int = JSONParser().parse(request)['movie_id']
+        movie_id: int = JSONParser().parse(request)["movie_id"]
         movie_details: TmdbMovieResponse = self.tmdb_service.fetch_movie(movie_id)
         trailer_path: str = self.prepare_trailer_path(movie_id)
-        movie_credits: TmdbMovieCreditsResponse = self.tmdb_service.fetch_movie_credits(movie_id)
+        movie_credits: TmdbMovieCreditsResponse = self.tmdb_service.fetch_movie_credits(
+            movie_id
+        )
         director: str = self.prepare_movie_director(movie_credits.crew_members)
         movie: Movie = Movie.from_response(movie_details, trailer_path, director)
         movie_serializer = FullMovieSerializer(data=model_to_dict(movie))
         try:
             movie_serializer.is_valid(raise_exception=True)
         except ValidationError as ex:
-            non_field_errors_key: Union[ErrorDetail, None] = ex.args[0]['non_field_errors'][0] \
-                if 'non_field_errors' in ex.args[0] else None
-            if non_field_errors_key and non_field_errors_key.code == 'unique':
+            non_field_errors_key: Union[ErrorDetail, None] = (
+                ex.args[0]["non_field_errors"][0]
+                if "non_field_errors" in ex.args[0]
+                else None
+            )
+            if non_field_errors_key and non_field_errors_key.code == "unique":
                 raise ValidationError(
-                    detail=f'Movie with given title and release date ({movie.title}, {movie.release_date}) already exists'
+                    detail=f"Movie with given title and release date ({movie.title}, {movie.release_date}) already exists"
                 )
             else:
                 raise ex
@@ -77,7 +81,9 @@ class MovieService:
     def update_movie(self, movie_id: int, request: HttpRequest) -> ReturnDict:
         movie: Movie = self.find_movie(movie_id)
         movie_data: Mapping[str, MovieUpdateRequest] = JSONParser().parse(request)
-        movie_serializer: FullMovieSerializer = FullMovieSerializer(movie, data=movie_data, partial=True)
+        movie_serializer: FullMovieSerializer = FullMovieSerializer(
+            movie, data=movie_data, partial=True
+        )
         movie_serializer.is_valid(raise_exception=True)
         movie_serializer.save()
         return movie_serializer.data
@@ -98,20 +104,32 @@ class MovieService:
         try:
             movie: Movie = Movie.objects.get(pk=movie_id)
         except Movie.DoesNotExist:
-            raise NotFound(detail={'detail': f'Movie with id {movie_id} does not exist'})
+            raise NotFound(
+                detail={"detail": f"Movie with id {movie_id} does not exist"}
+            )
         return movie
 
     def prepare_trailer_path(self, movie_id: int) -> str:
-        movie_trailers: List[TmdbMovieTrailerResponse] = self.tmdb_service.fetch_movie_trailer(movie_id)
-        official_trailers: List[TmdbMovieTrailerResponse] = [trailer for trailer in movie_trailers if trailer.official]
-        trailer_key: str = official_trailers[0].key if official_trailers else movie_trailers[0].key
-        return 'https://www.youtube.com/watch?v=' + trailer_key
+        movie_trailers: List[
+            TmdbMovieTrailerResponse
+        ] = self.tmdb_service.fetch_movie_trailer(movie_id)
+        official_trailers: List[TmdbMovieTrailerResponse] = [
+            trailer for trailer in movie_trailers if trailer.official
+        ]
+        trailer_key: str = (
+            official_trailers[0].key if official_trailers else movie_trailers[0].key
+        )
+        return "https://www.youtube.com/watch?v=" + trailer_key
 
-    def prepare_movie_director(self, crew_members: List[TmdbMovieCrewMemberResponse]) -> str:
-        return next(member.name for member in crew_members if member.job == 'Director')
+    def prepare_movie_director(
+        self, crew_members: List[TmdbMovieCrewMemberResponse]
+    ) -> str:
+        return next(member.name for member in crew_members if member.job == "Director")
 
     def prepare_movie_actors(self, movie: Movie, cast_members: List[int]) -> None:
-        movie_actors: List[Actor] = self.actor_service.get_or_create_actors(cast_members)
+        movie_actors: List[Actor] = self.actor_service.get_or_create_actors(
+            cast_members
+        )
         movie.actors.add(*movie_actors)
 
     def add_actor_to_movie(self, actor_id: int, movie_id: int) -> None:
@@ -120,7 +138,11 @@ class MovieService:
         movie.actors.add(actor)
 
     def movie_admin_search(self, search_query: str) -> ReturnDict:
-        search_results: List[TmdbMovieSearchResponse] = self.tmdb_service.movie_search(search_query)
-        movie_serializer: SearchMovieSerializer = SearchMovieSerializer(data=search_results, many=True)
+        search_results: List[TmdbMovieSearchResponse] = self.tmdb_service.movie_search(
+            search_query
+        )
+        movie_serializer: SearchMovieSerializer = SearchMovieSerializer(
+            data=search_results, many=True
+        )
         movie_serializer.is_valid()
         return movie_serializer.data

@@ -10,6 +10,7 @@ class TmdbMovieCreditsResponse:
     crew_members: List[TmdbMovieCrewMemberResponse]
 
     def __init__(self, **kwargs) -> None:
-        self.cast_members = [member['id'] for member in kwargs['cast']]
-        self.crew_members = [TmdbMovieCrewMemberResponse(**member) for member in kwargs['crew']]
-
+        self.cast_members = [member["id"] for member in kwargs["cast"]]
+        self.crew_members = [
+            TmdbMovieCrewMemberResponse(**member) for member in kwargs["crew"]
+        ]

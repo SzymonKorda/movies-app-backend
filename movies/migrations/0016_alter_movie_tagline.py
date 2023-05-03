@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('movies', '0015_alter_movie_actors'),
+        ("movies", "0015_alter_movie_actors"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='movie',
-            name='tagline',
-            field=models.CharField(blank=True, default='', max_length=500),
+            model_name="movie",
+            name="tagline",
+            field=models.CharField(blank=True, default="", max_length=500),
         ),
     ]

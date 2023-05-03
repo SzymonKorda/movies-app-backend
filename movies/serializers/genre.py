@@ -7,4 +7,4 @@ class FullGenreSerializer(serializers.ModelSerializer[Genre]):
     class Meta:
         id = serializers.ReadOnlyField()
         model = Genre
-        fields = '__all__'
+        fields = "__all__"

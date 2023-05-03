@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('movies', '0002_movie_image'),
+        ("movies", "0002_movie_image"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='movie',
-            name='actors',
-            field=models.ManyToManyField(blank=True, to='movies.actor'),
+            model_name="movie",
+            name="actors",
+            field=models.ManyToManyField(blank=True, to="movies.actor"),
         ),
     ]
