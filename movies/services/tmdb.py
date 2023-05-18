@@ -1,10 +1,10 @@
 import json
 import os
-from typing import List, Union, Dict, Any
+from typing import List, Dict, Any
 
 import requests
 from requests import Response
-from rest_framework.exceptions import APIException, NotFound
+from rest_framework.exceptions import NotFound
 
 from movies.payload.tmdb_actor_response import TmdbActorResponse
 from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
