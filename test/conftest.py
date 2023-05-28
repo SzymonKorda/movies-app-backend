@@ -2,9 +2,12 @@ import json
 
 import pytest
 
+from movies.models.movie import Movie
+
 
 RESOURCE_ID = 1
 ENCODING = "utf-8"
+MOVIE_TITLE_SEARCH_QUERY = "Gump"
 
 
 @pytest.fixture
@@ -22,7 +25,7 @@ def tmdb_actor():
 
 
 @pytest.fixture
-def tmdb_resource_id() -> int:
+def resource_id() -> int:
     return RESOURCE_ID
 
 
@@ -95,3 +98,33 @@ def tmdb_movie_search() -> bytes:
             ]
         }
     ).encode(ENCODING)
+
+
+@pytest.fixture
+def movie() -> Movie():
+    return Movie(
+        **{
+            # "id": 1,
+            "title": "Forrest Gump",
+            "description": "Description",
+            "box_office": 55000000.0,
+            "duration": 142,
+            "release_date": "1994-06-23",
+            "poster_path": "https://image.tmdb.org/t/p/w500/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+            "backdrop_path": "https://image.tmdb.org/t/p/w500/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg",
+            "adult": False,
+            "imdb_path": "https://www.imdb.com/title/tt0109830",
+            "revenue": 677387716.0,
+            "status": "Released",
+            "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
+            "trailer_path": "https://www.youtube.com/watch?v=0YAKkHutmFI",
+            "director": "Robert Zemeckis",
+            # "genres": [],
+            # "actors": []
+        }
+    )
+
+
+@pytest.fixture
+def search_query() -> str:
+    return MOVIE_TITLE_SEARCH_QUERY

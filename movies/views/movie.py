@@ -1,8 +1,10 @@
 from typing import Optional, List
 
 from django.db import transaction
+from django.db.models import QuerySet
 from django.http import HttpRequest, JsonResponse
 from rest_framework import status
+from rest_framework.parsers import JSONParser
 from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
@@ -22,7 +24,7 @@ class MovieView(APIView):
                 {"data": FullMovieSerializer(movie).data}, status=status.HTTP_200_OK
             )
         search_query: str = request.GET.get("search", default="")
-        movies: List[Movie] = self.movie_service.get_all_movies(search_query)
+        movies: QuerySet[Movie] = self.movie_service.get_all_movies(search_query)
         return JsonResponse(
             {"data": SimpleMovieSerializer(movies, many=True).data},
             status=status.HTTP_200_OK,
@@ -30,7 +32,8 @@ class MovieView(APIView):
 
     @transaction.atomic
     def post(self, request: HttpRequest) -> JsonResponse:
-        movie: ReturnDict = self.movie_service.create_movie(request)
+        movie_id: int = JSONParser().parse(request)["movie_id"]
+        movie: ReturnDict = self.movie_service.create_movie(movie_id)
         return JsonResponse({"data": movie}, status=status.HTTP_201_CREATED)
 
     def put(self, request: HttpRequest, movie_id: int) -> JsonResponse:

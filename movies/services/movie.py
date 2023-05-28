@@ -37,12 +37,11 @@ class MovieService:
     def get_movie(self, movie_id: int) -> Movie:
         return self.find_movie(movie_id)
 
-    def get_all_movies(self, search_query: str) -> List[Movie]:
-        movies: QuerySet[Movie] = Movie.objects.filter(title__icontains=search_query)
-        return list(movies)
+    def get_all_movies(self, search_query: str) -> QuerySet[Movie]:
+        return Movie.objects.filter(title__icontains=search_query)
 
-    def create_movie(self, request: HttpRequest) -> ReturnDict:
-        movie_id: int = JSONParser().parse(request)["movie_id"]
+
+    def create_movie(self, movie_id: int) -> ReturnDict:
         movie_details: TmdbMovieResponse = self.tmdb_service.fetch_movie(movie_id)
         trailer_path: str = self.prepare_trailer_path(movie_id)
         movie_credits: TmdbMovieCreditsResponse = self.tmdb_service.fetch_movie_credits(
