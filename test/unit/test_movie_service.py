@@ -11,7 +11,7 @@ from rest_framework.exceptions import NotFound
 
 from movies.models.movie import Movie
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
-from movies.services.movie import MovieService
+from movies.services.movie_service import MovieService
 
 
 def test_should_get_movie(mocker: MockerFixture, movie: Movie, resource_id: int):

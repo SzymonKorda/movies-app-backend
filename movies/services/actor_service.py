@@ -12,9 +12,9 @@ from movies.models.actor import Actor
 from movies.models.movie import Movie
 from movies.payload.actor_update_request import ActorUpdateRequest
 from movies.payload.tmdb_actor_response import TmdbActorResponse
-from movies.serializers.actor import FullActorSerializer, SimpleActorSerializer
-from movies.serializers.movie import SimpleMovieSerializer
-from movies.services.tmdb import TmdbService
+from movies.serializers.actor_serializer import FullActorSerializer, SimpleActorSerializer
+from movies.serializers.movie_serializer import SimpleMovieSerializer
+from movies.services.tmdb_service import TmdbService
 
 
 class ActorService:

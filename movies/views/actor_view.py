@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
-from movies.services.actor import ActorService
+from movies.services.actor_service import ActorService
 
 
 class ActorView(APIView):

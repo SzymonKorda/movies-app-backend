@@ -9,7 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from movies.payload.user_create_request import UserCreateRequest
 from movies.serializers.jwt_response import CustomTokenObtainPairSerializer
-from movies.serializers.user import UserSerializer
+from movies.serializers.user_serializer import UserSerializer
 
 
 class UserView(APIView):

@@ -1,9 +1,9 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 
-from .views.actor import *
-from .views.movie import *
-from .views.user import *
+from .views.actor_view import *
+from .views.movie_view import *
+from .views.user_view import *
 
 urlpatterns = [
     path("movies", MovieView.as_view()),

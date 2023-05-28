@@ -17,10 +17,10 @@ from movies.payload.tmdb_movie_crew_member_response import TmdbMovieCrewMemberRe
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
 from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
-from movies.serializers.movie import FullMovieSerializer, SearchMovieSerializer
-from movies.services.actor import ActorService
-from movies.services.genre import GenreService
-from movies.services.tmdb import TmdbService
+from movies.serializers.movie_serializer import FullMovieSerializer, SearchMovieSerializer
+from movies.services.actor_service import ActorService
+from movies.services.genre_service import GenreService
+from movies.services.tmdb_service import TmdbService
 
 tmdb_key = os.getenv("TMDB_KEY")
 tmdb_uri = "https://api.themoviedb.org/3"

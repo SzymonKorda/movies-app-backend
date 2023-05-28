@@ -10,7 +10,7 @@ from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
 from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
-from movies.services.tmdb import TmdbService
+from movies.services.tmdb_service import TmdbService
 
 
 def test_should_raise_exception_when_tmdb_actor_not_found(

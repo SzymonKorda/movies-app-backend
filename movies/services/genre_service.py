@@ -4,7 +4,7 @@ from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict
 
 from movies.models.genre import Genre
 from movies.models.movie import Movie
-from movies.serializers.genre import FullGenreSerializer
+from movies.serializers.genre_serializer import FullGenreSerializer
 
 
 class GenreService:

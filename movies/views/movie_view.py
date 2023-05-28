@@ -9,8 +9,8 @@ from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
 from movies.models.movie import Movie
-from movies.serializers.movie import FullMovieSerializer, SimpleMovieSerializer
-from movies.services.movie import MovieService
+from movies.serializers.movie_serializer import FullMovieSerializer, SimpleMovieSerializer
+from movies.services.movie_service import MovieService
 
 
 # TODO: ask about ReturnList, ReturnDict and serialized types (serializer.data)
