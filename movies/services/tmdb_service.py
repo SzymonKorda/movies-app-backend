@@ -21,7 +21,7 @@ class TmdbService:
 
     def fetch_actor(self, actor_id: int) -> TmdbActorResponse:
         response: Response = self.client.get("person", f"{actor_id}", auth=self.auth)
-        return TmdbActorResponse(**json.loads(response.content))
+        return TmdbActorResponse(**response.json())
 
     def fetch_movie(self, movie_id: int) -> TmdbMovieResponse:
         response: Response = self.client.get("movie", f"{movie_id}", auth=self.auth)
@@ -31,7 +31,7 @@ class TmdbService:
         response: Response = self.client.get(
             "movie", f"{movie_id}", "videos", auth=self.auth
         )
-        movie_trailers: Dict[str, Any] = json.loads(response.content)
+        movie_trailers: Dict[str, Any] = response.json()
         return [
             TmdbMovieTrailerResponse(**trailer) for trailer in movie_trailers["results"]
         ]
@@ -40,8 +40,7 @@ class TmdbService:
         response: Response = self.client.get(
             "movie", f"{movie_id}", "credits", auth=self.auth
         )
-        content: Dict[str, Any] = json.loads(response.content)
-        return TmdbMovieCreditsResponse(**content)
+        return TmdbMovieCreditsResponse(**response.json())
 
     def movie_search(self, search_query) -> List[TmdbMovieSearchResponse]:
         params: Dict[str, str] = {"query": search_query}
@@ -50,7 +49,7 @@ class TmdbService:
         )
         return [
             TmdbMovieSearchResponse(**movie)
-            for movie in json.loads(response.content)["results"]
+            for movie in response.json()["results"]
         ]
 
 

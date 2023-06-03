@@ -32,7 +32,7 @@ def prepare_auth_header(token):
 
 
 TMDB_KEY = os.environ.get("TMDB_KEY")
-TMDB_URI = "https://api.themoviedb.org/3/"
+TMDB_URI = "https://api.themoviedb.org/3"
 TMDB_HEADERS = prepare_auth_header(TMDB_KEY)
 
 ALLOWED_HOSTS: List[str] = []

@@ -1,11 +1,7 @@
-from itertools import chain
 from typing import List
 from unittest.mock import MagicMock
 
-from django.test import RequestFactory
-
 import pytest
-from django.http import HttpRequest
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import NotFound
 

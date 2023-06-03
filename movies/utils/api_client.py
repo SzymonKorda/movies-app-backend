@@ -1,4 +1,4 @@
-import urllib.parse as urllib
+import urllib.parse
 
 import requests
 from requests import Response, HTTPError
@@ -18,13 +18,14 @@ class ApiClient:
         response: Response = requests.request(
             method=method,
             url=self.prepare_uri(*path),
-            params=urllib.urlencode(params),
+            params=urllib.parse.urlencode(params),
             auth=auth,
         )
         self.handle_exception(response)
         return response
 
-    def handle_exception(self, response):
+    # TODO improve this
+    def handle_exception(self, response: Response) -> None:
         try:
             response.raise_for_status()
         except HTTPError as e:
