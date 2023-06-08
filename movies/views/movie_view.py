@@ -9,13 +9,17 @@ from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
 from movies.models.movie import Movie
-from movies.serializers.movie_serializer import FullMovieSerializer, SimpleMovieSerializer
+from movies.serializers.movie_serializer import (
+    FullMovieSerializer,
+    SimpleMovieSerializer,
+)
 from movies.services.movie_service import MovieService
+from movies.services.tmdb_service import TmdbService
 
 
 # TODO: ask about ReturnList, ReturnDict and serialized types (serializer.data)
 class MovieView(APIView):
-    movie_service: MovieService = MovieService()
+    movie_service: MovieService = MovieService(TmdbService())
 
     def get(self, request: HttpRequest, movie_id: Optional[int] = None) -> JsonResponse:
         if movie_id:
@@ -54,7 +58,7 @@ class MovieView(APIView):
 
 class MovieActorsView(APIView):
     def __init__(self, *args, **kwargs):
-        self.movie_service = MovieService()
+        self.movie_service = MovieService(TmdbService())
         super().__init__(*args, **kwargs)
 
     # permission_classes = [IsAuthenticated]
@@ -72,7 +76,7 @@ class MovieActorsView(APIView):
 
 class MovieGenresView(APIView):
     def __init__(self, *args, **kwargs):
-        self.movie_service = MovieService()
+        self.movie_service = MovieService(TmdbService())
         super().__init__(*args, **kwargs)
 
     # permission_classes = [IsAuthenticated]
@@ -83,7 +87,7 @@ class MovieGenresView(APIView):
 
 
 class MovieSearchView(APIView):
-    movie_service = MovieService()
+    movie_service = MovieService(TmdbService())
 
     def get(self, request: HttpRequest) -> JsonResponse:
         search_query: str = request.GET.get("query", default="")

@@ -24,13 +24,14 @@ class ApiClient:
         self.handle_exception(response)
         return response
 
-    # TODO improve this
+    # TODO: improve this
     def handle_exception(self, response: Response) -> None:
         try:
             response.raise_for_status()
         except HTTPError as e:
             raise APIException(e)
 
+    # TODO: use urljoin() method
     def prepare_uri(self, *path) -> str:
         uri = self.base_uri
         for p in path:

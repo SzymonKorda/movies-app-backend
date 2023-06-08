@@ -59,7 +59,7 @@ class ActorService:
         actor.delete()
 
     def get_movies_from_actor(self, actor_id: int) -> ReturnDict:
-        # TODO error: "Actor" has no attribute "movie_set" [attr-defined] -> Dynamically created property
+        # TODO: error "Actor" has no attribute "movie_set" [attr-defined] -> Dynamically created property
         actor: Any = self.find_actor(actor_id)
         return SimpleMovieSerializer(actor.movie_set.all(), many=True).data
 

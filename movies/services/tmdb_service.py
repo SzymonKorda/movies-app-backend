@@ -1,4 +1,3 @@
-import json
 from typing import List, Dict, Any
 
 from django.conf import settings
@@ -9,11 +8,12 @@ from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
 from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
+from movies.services.tmdb_interface import TmdbInterface
 from movies.utils.api_client import ApiClient
 from movies.utils.tmdb_auth import TmdbAuth
 
 
-class TmdbService:
+class TmdbService(TmdbInterface):
     def __init__(self) -> None:
         self.client = ApiClient(settings.TMDB_URI)
         self.auth = TmdbAuth()
@@ -48,14 +48,6 @@ class TmdbService:
             "search", "movie", auth=self.auth, **params
         )
         return [
-            TmdbMovieSearchResponse(**movie)
-            for movie in response.json()["results"]
+            TmdbMovieSearchResponse(**movie) for movie in response.json()["results"]
         ]
 
-
-# TODO: create fake manager - whole service mock, list of requests
-# FakeTestService
-# requests = []
-# FakeTestService.add_request()
-# Jakub Korda18:11
-# T,bbService.get_movies()

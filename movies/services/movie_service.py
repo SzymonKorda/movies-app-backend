@@ -17,10 +17,14 @@ from movies.payload.tmdb_movie_crew_member_response import TmdbMovieCrewMemberRe
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
 from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
-from movies.serializers.movie_serializer import FullMovieSerializer, SearchMovieSerializer
+from movies.serializers.movie_serializer import (
+    FullMovieSerializer,
+    SearchMovieSerializer,
+)
 from movies.services.actor_service import ActorService
 from movies.services.genre_service import GenreService
 from movies.services.tmdb_service import TmdbService
+from movies.utils.genre_name import GenreName
 
 tmdb_key = os.getenv("TMDB_KEY")
 tmdb_uri = "https://api.themoviedb.org/3"
@@ -28,9 +32,9 @@ headers = {"Authorization": "Bearer " + tmdb_key} if tmdb_key else None
 
 
 class MovieService:
-    def __init__(self) -> None:
+    def __init__(self, tmdb_service) -> None:
+        self.tmdb_service = tmdb_service
         self.actor_service = ActorService()
-        self.tmdb_service = TmdbService()
         self.genre_service = GenreService()
         super().__init__()
 
@@ -39,7 +43,6 @@ class MovieService:
 
     def get_all_movies(self, search_query: str) -> QuerySet[Movie]:
         return Movie.objects.filter(title__icontains=search_query)
-
 
     def create_movie(self, movie_id: int) -> ReturnDict:
         movie_details: TmdbMovieResponse = self.tmdb_service.fetch_movie(movie_id)
@@ -50,31 +53,32 @@ class MovieService:
         director: str = self.prepare_movie_director(movie_credits.crew_members)
         movie: Movie = Movie.from_response(movie_details, trailer_path, director)
         movie_serializer = FullMovieSerializer(data=model_to_dict(movie))
-        try:
-            movie_serializer.is_valid(raise_exception=True)
-        except ValidationError as ex:
-            non_field_errors_key: Union[ErrorDetail, None] = (
-                ex.args[0]["non_field_errors"][0]
-                if "non_field_errors" in ex.args[0]
-                else None
-            )
-            if non_field_errors_key and non_field_errors_key.code == "unique":
-                raise ValidationError(
-                    detail=f"Movie with given title and release date ({movie.title}, {movie.release_date}) already exists"
-                )
-            else:
-                raise ex
-
-        movie = movie_serializer.save()
-        self.prepare_movie_actors(movie, movie_credits.cast_members)
+        movie_serializer.is_valid(raise_exception=True)
+        movie: Movie = movie_serializer.save()
         self.prepare_movie_genres(movie, movie_details.genres)
         return movie_serializer.data
+
+    # def create_movie_with_actors_and_genres(self, movie_id: int) -> ReturnDict:
+    #     movie_details: TmdbMovieResponse = self.tmdb_service.fetch_movie(movie_id)
+    #     trailer_path: str = self.prepare_trailer_path(movie_id)
+    #     movie_credits: TmdbMovieCreditsResponse = self.tmdb_service.fetch_movie_credits(
+    #         movie_id
+    #     )
+    #     director: str = self.prepare_movie_director(movie_credits.crew_members)
+    #     movie: Movie = Movie.from_response(movie_details, trailer_path, director)
+    #     movie_serializer = FullMovieSerializer(data=model_to_dict(movie))
+    #     movie_serializer.is_valid(raise_exception=True)
+    #     movie = movie_serializer.save()
+    #     self.prepare_movie_actors(movie, movie_credits.cast_members)
+    #     self.prepare_movie_genres(movie, movie_details.genres)
+    #     return movie_serializer.data
 
     def prepare_movie_genres(self, movie: Movie, genres: List[str]) -> None:
         movie_genres: List[Genre] = []
         for name in genres:
-            genre: Genre = self.genre_service.find_or_create_genre(name)[0]
-            movie_genres.append(genre)
+            if name in GenreName.values():
+                genre: Genre = self.genre_service.find_or_create_genre(name)
+                movie_genres.append(genre)
         movie.genres.add(*movie_genres)
 
     def update_movie(self, movie_id: int, request: HttpRequest) -> ReturnDict:

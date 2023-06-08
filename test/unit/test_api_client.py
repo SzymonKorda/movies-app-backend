@@ -20,7 +20,7 @@ def test_should_raise_api_exception(mocker: MockerFixture):
     with pytest.raises(APIException) as e:
         api_client.handle_exception(response_mock)
 
-    # TODO why isInstance(e.type, APIException does not work, also why
+    # TODO: why isInstance(e.type, APIException does not work, also why
     #  e.type is APIException works)
     assert isinstance(e.value, APIException)
 
