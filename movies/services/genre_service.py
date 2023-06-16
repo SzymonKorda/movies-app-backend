@@ -9,8 +9,6 @@ from movies.utils.genre_name import GenreName
 
 
 class GenreService:
-    def __init__(self) -> None:
-        super().__init__()
 
     def find_or_create_genre(self, name: str) -> Union[Genre, None]:
         if name in GenreName.values():

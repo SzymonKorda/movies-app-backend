@@ -24,6 +24,12 @@ class GenreName(enum.Enum):
     WAR = "War"
     WESTERN = "Western"
 
+    OTHER = "Other"
+
     @classmethod
     def values(cls) -> List[str]:
         return [name.value for name in GenreName]
+
+    # @classmethod
+    # def __missing__(cls):
+    #     return cls.OTHER

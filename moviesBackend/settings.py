@@ -26,14 +26,8 @@ SECRET_KEY = "django-insecure-t)t2w#+0occ#a%&fd*x=i8soau!0)k6rm(_%%()#=i)%mp0*x^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
-def prepare_auth_header(token):
-    return {"Authorization": f"Bearer {token}"}
-
-
 TMDB_KEY = os.environ.get("TMDB_KEY")
-TMDB_URI = "https://api.themoviedb.org/3"
-TMDB_HEADERS = prepare_auth_header(TMDB_KEY)
+TMDB_URI = "https://api.themoviedb.org/3/"
 
 ALLOWED_HOSTS: List[str] = []
 

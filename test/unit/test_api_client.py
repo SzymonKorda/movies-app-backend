@@ -1,14 +1,13 @@
 from unittest.mock import MagicMock
 
 import pytest
-from django.conf import settings
 from pytest_mock import MockerFixture
 from requests.models import HTTPError
 from rest_framework.exceptions import APIException
 
-from movies.utils.api_client import ApiClient
+from movies.utils.tmdb_client import TmdbClient
 
-api_client = ApiClient(settings.TMDB_URI)
+api_client = TmdbClient()
 
 
 def test_should_raise_api_exception(mocker: MockerFixture):

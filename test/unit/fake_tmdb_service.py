@@ -1,32 +1,50 @@
-from typing import List
+from typing import List, Dict, Union
+
+from requests import Response
 
 from movies.payload.tmdb_actor_response import TmdbActorResponse
 from movies.payload.tmdb_movie_credits_response import TmdbMovieCreditsResponse
 from movies.payload.tmdb_movie_response import TmdbMovieResponse
 from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.payload.tmdb_movie_trailer_response import TmdbMovieTrailerResponse
-from movies.services.tmdb_interface import TmdbInterface
 
 
-class FakeTmdbService(TmdbInterface):
+class FakeTmdbService:
+    responses: Dict[str, list] = {}
+
+    def clear_responses(self):
+        self.responses.clear()
+
+    def add_response(self, function: str, response: Union[Response, List[Response]]):
+        self.responses[function].append(response)
+
+    # def add_movie_response(self, response):
+    #     self.add_response('fetch_movie', response)
+    #
+    # def add_trailer_response(self, response):
+    #     self.add_response('fetch_movie', response)
+
     def fetch_movie(self, movie_id) -> TmdbMovieResponse:
-        return TmdbMovieResponse(
-            **{
-                "original_title": "Forrest Gump",
-                "overview": "Description",
-                "budget": 55000000.0,
-                "runtime": 142,
-                "release_date": "1994-06-23",
-                "poster_path": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
-                "backdrop_path": "/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg",
-                "adult": False,
-                "imdb_id": "tt0109830",
-                "revenue": 677387716.0,
-                "status": "Released",
-                "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
-                "genres": [{"name": "Thriller"}, {"name": "RandomGenre"}],
-            }
-        )
+        return self.responses['fetch_movie'].pop()
+
+
+        # return TmdbMovieResponse(
+        #     **{
+        #         "original_title": "Forrest Gump",
+        #         "overview": "Description",
+        #         "budget": 55000000.0,
+        #         "runtime": 142,
+        #         "release_date": "1994-06-23",
+        #         "poster_path": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+        #         "backdrop_path": "/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg",
+        #         "adult": False,
+        #         "imdb_id": "tt0109830",
+        #         "revenue": 677387716.0,
+        #         "status": "Released",
+        #         "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
+        #         "genres": [{"name": "Thriller"}, {"name": "RandomGenre"}],
+        #     }
+        # )
 
     def fetch_actor(self, actor_id: int) -> TmdbActorResponse:
         return TmdbActorResponse(

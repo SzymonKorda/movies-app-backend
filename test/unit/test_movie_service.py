@@ -8,11 +8,26 @@ from movies.models import Movie, Actor
 from movies.services.movie_service import MovieService
 from test.unit.fake_tmdb_service import FakeTmdbService
 
-movie_service = MovieService(FakeTmdbService())
+# movie_service = MovieService(FakeTmdbService())
+
+service = FakeTmdbService()
+movie_service = MovieService(service)
+
+
+def test_fetch_movie(tmdb_movie_response):
+    service.clear_responses()
+
+    tmdb_movie_response.original_title = "Bububu"
+    service.add_response('fetch_movie', tmdb_movie_response)
+    service.add_response('add_movie_credits', tmdb_movie_response)
+    service.add_response('fetch_trailer_movie', [tmdb_movie_response])
+
+    movie = movie_service.create_movie(1)
+
 
 
 def test_should_create_movie(
-    mocker: MockerFixture, movie: Movie, resource_id: int, tmdb_actor
+        mocker: MockerFixture, movie: Movie, resource_id: int, tmdb_actor
 ):
     mocker.patch(
         "movies.serializers.movie_serializer.FullMovieSerializer.is_valid",
@@ -36,7 +51,6 @@ def test_should_create_movie(
     result = movie_service.create_movie(resource_id)
 
     assert len(result["genres"]) == 0
-
 
 # def test_should_create_movie_x(
 #     mocker: MockerFixture, movie: Movie, resource_id: int, tmdb_actor
