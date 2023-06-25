@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Union, Any, List
 
 from rest_framework import serializers
 
@@ -14,6 +14,8 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
     budget = serializers.FloatField(source="box_office")
     runtime = serializers.IntegerField(source="duration")
     imdb_id = serializers.CharField(source="imdb_path")
+    director = serializers.SerializerMethodField()
+    trailer_path = serializers.SerializerMethodField()
 
     class Meta:
         id = serializers.ReadOnlyField()
@@ -36,6 +38,12 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
             "trailer_path",
         )
 
+    def get_trailer_path(self, results):
+        return self.prepare_trailer_path()
+
+    def get_director(self, director):
+        return self.prepare_movie_director()
+
     def get_box_office(self, budget):
         return float(budget)
 
@@ -53,6 +61,22 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
 
     def get_revenue(self, revenue):
         return float(revenue)
+
+    def prepare_movie_director(self):
+        crew = self.initial_data["crew"]
+        return next(member["name"] for member in crew if member["job"] == "Director")
+
+    def prepare_trailer_path(self) -> str:
+        movie_trailers = self.initial_data['results']
+        official_trailers: List[dict] = [
+            trailer for trailer in movie_trailers if trailer["official"]
+        ]
+        trailer_key: str = (
+            official_trailers[0]["key"]
+            if official_trailers
+            else movie_trailers[0]["key"]
+        )
+        return "https://www.youtube.com/watch?v=" + trailer_key
 
     @staticmethod
     def prepare_resource_path(

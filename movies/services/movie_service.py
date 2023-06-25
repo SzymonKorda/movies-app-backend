@@ -42,9 +42,7 @@ class MovieService:
         movie_details: dict = self.tmdb_service.fetch_movie(movie_id)
         movie_trailer: dict = self.tmdb_service.fetch_movie_trailer(movie_id)
         movie_credits: dict = self.tmdb_service.fetch_movie_credits(movie_id)
-        director: str = self.prepare_movie_director(movie_credits["crew"])
-        trailer: str = self.prepare_trailer_path(movie_trailer["results"])
-        movie_request = {**movie_details, **{"director": director}, **{"trailer_path": trailer}}
+        movie_request = {**movie_details, **movie_credits, **movie_trailer}
         movie_serializer = FullMovieSerializer(data=movie_request)
         movie_serializer.is_valid(raise_exception=True)
         movie: Movie = movie_serializer.save()
@@ -110,22 +108,6 @@ class MovieService:
                 detail={"detail": f"Movie with id {movie_id} does not exist"}
             )
         return movie
-
-    def prepare_trailer_path(self, movie_trailers: dict) -> str:
-        official_trailers: List[dict] = [
-            trailer for trailer in movie_trailers if trailer["official"]
-        ]
-        trailer_key: str = (
-            official_trailers[0]["key"]
-            if official_trailers
-            else movie_trailers[0]["key"]
-        )
-        return "https://www.youtube.com/watch?v=" + trailer_key
-
-    def prepare_movie_director(self, crew_members: dict) -> str:
-        return next(
-            member["name"] for member in crew_members if member["job"] == "Director"
-        )
 
     def prepare_movie_actors(self, movie: Movie, cast_members: List[int]) -> None:
         movie_actors: List[Actor] = self.actor_service.get_or_create_actors(
