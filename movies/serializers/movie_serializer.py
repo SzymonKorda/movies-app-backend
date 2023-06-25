@@ -17,6 +17,11 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
     director = serializers.SerializerMethodField()
     trailer_path = serializers.SerializerMethodField()
 
+    def to_representation(self, instance) -> Any:
+        representation = super().to_representation(instance)
+        representation['genres'] = self.initial_data['genre_names']
+        return representation
+
     class Meta:
         id = serializers.ReadOnlyField()
         model = Movie
