@@ -2,26 +2,18 @@ from datetime import datetime
 from typing import Union
 
 from rest_framework import serializers
-from rest_framework.fields import DictField
 
-from movies.models import Actor
 from movies.models.movie import Movie
 
 TMDB_IMAGE_URI = "https://image.tmdb.org/t/p/w500"
 IMDB_MOVIE_URI = "https://www.imdb.com/title/"
 
-class CrewSerializer(serializers.Serializer):
-    name = serializers.CharField()
-
-    def get_name(self, crew):
-        print(crew)
 
 class FullMovieSerializer(serializers.ModelSerializer[Movie]):
     overview = serializers.CharField(source="description")
     budget = serializers.FloatField(source="box_office")
     runtime = serializers.IntegerField(source="duration")
     imdb_id = serializers.CharField(source="imdb_path")
-    # crew = serializers.ListSerializer(source="director", child)
 
     class Meta:
         id = serializers.ReadOnlyField()
@@ -42,11 +34,7 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
             "tagline",
             "director",
             "trailer_path",
-            # "crew",
         )
-
-    def get_crew(self, crew):
-        return next(member.name for member in crew if member.job == "Director")
 
     def get_box_office(self, budget):
         return float(budget)

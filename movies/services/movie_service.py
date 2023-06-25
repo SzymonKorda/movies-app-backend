@@ -48,7 +48,7 @@ class MovieService:
         movie_serializer = FullMovieSerializer(data=movie_request)
         movie_serializer.is_valid(raise_exception=True)
         movie: Movie = movie_serializer.save()
-        self.prepare_movie_genres(movie, movie_details.genres)
+        # self.prepare_movie_genres(movie, movie_details.genres)
         return movie_serializer.data
 
     # def create_movie_with_actors_and_genres(self, movie_id: int) -> ReturnDict:
