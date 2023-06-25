@@ -7,12 +7,10 @@ from rest_framework.exceptions import NotFound
 from rest_framework.parsers import JSONParser
 from rest_framework.utils.serializer_helpers import ReturnDict
 
-from movies.models import Genre
 from movies.models.actor import Actor
 from movies.models.movie import Movie
 from movies.payload.movie_update_request import MovieUpdateRequest
 from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
-from movies.serializers.genre_serializer import FullGenreSerializer
 from movies.serializers.movie_serializer import (
     FullMovieSerializer,
     SearchMovieSerializer,
@@ -39,51 +37,27 @@ class MovieService:
         return Movie.objects.filter(title__icontains=search_query)
 
     def create_movie(self, movie_id: int) -> ReturnDict:
+        genres_id, movie_request = self.prepare_movie_data(movie_id)
+        self.serializer = FullMovieSerializer(data=movie_request)
+        self.serializer.is_valid(raise_exception=True)
+        movie: Movie = self.serializer.save()
+        movie.genres.add(*genres_id)
+        return self.serializer.data
+
+    def prepare_movie_data(self, movie_id):
         movie_details: dict = self.tmdb_service.fetch_movie(movie_id)
         movie_trailer: dict = self.tmdb_service.fetch_movie_trailer(movie_id)
         movie_credits: dict = self.tmdb_service.fetch_movie_credits(movie_id)
-
-        genres = movie_details["genres"]
-        genre_serializer = FullGenreSerializer(data=genres, many=True)
-        genre_serializer.is_valid()
-        gr = Genre.objects.filter(
-            name__in=[genre["name"] for genre in genre_serializer.data]
-        )
-        ids = [genre.id for genre in gr]
-        names = [genre.name for genre in gr]
-
-        movie_request = {
+        genres = self.genre_service.get_genres_by_name(movie_details["genres"])
+        genres_id = [genre.id for genre in genres]
+        genre_names = [genre.name for genre in genres]
+        movie_data = {
             **movie_details,
             **movie_credits,
             **movie_trailer,
-            **{"genre_names": names},
+            **{"genre_names": genre_names},
         }
-        movie_serializer = FullMovieSerializer(data=movie_request)
-        movie_serializer.is_valid(raise_exception=True)
-        movie: Movie = movie_serializer.save()
-        movie.genres.add(*ids)
-        # genres = self.prepare_movie_genres(movie, movie_details["genres"])
-        # movie_serializer.data.update({"genre_names": [genre.name for genre in genres]})
-        return movie_serializer.data
-
-    # def prepare_movie_genres(self, movie: Movie, genres: List[dict]):
-    #
-    #     return gr
-
-    # def create_movie_with_actors_and_genres(self, movie_id: int) -> ReturnDict:
-    #     movie_details: TmdbMovieResponse = self.tmdb_service.fetch_movie(movie_id)
-    #     trailer_path: str = self.prepare_trailer_path(movie_id)
-    #     movie_credits: TmdbMovieCreditsResponse = self.tmdb_service.fetch_movie_credits(
-    #         movie_id
-    #     )
-    #     director: str = self.prepare_movie_director(movie_credits.crew_members)
-    #     movie: Movie = Movie.from_response(movie_details, trailer_path, director)
-    #     movie_serializer = FullMovieSerializer(data=model_to_dict(movie))
-    #     movie_serializer.is_valid(raise_exception=True)
-    #     movie = movie_serializer.save()
-    #     self.prepare_movie_actors(movie, movie_credits.cast_members)
-    #     self.prepare_movie_genres(movie, movie_details.genres)
-    #     return movie_serializer.data
+        return genres_id, movie_data
 
     def update_movie(self, movie_id: int, request: HttpRequest) -> ReturnDict:
         movie: Movie = self.find_movie(movie_id)
