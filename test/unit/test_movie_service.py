@@ -5,60 +5,48 @@ from pytest_mock import MockerFixture
 from rest_framework.exceptions import ValidationError
 
 from movies.models import Movie, Actor
+from movies.serializers.genre_serializer import FullGenreSerializer
 from movies.services.movie_service import MovieService
+from movies.services.tmdb_service import TmdbService
+from movies.utils.genre_name import GenreName
 from test.unit.fake_tmdb_service import FakeTmdbService
 
 # movie_service = MovieService(FakeTmdbService())
 
-service = FakeTmdbService()
-movie_service = MovieService(service)
 
-
-def test_fetch_movie(tmdb_movie_response):
-    service.clear_responses()
-
-    tmdb_movie_response.original_title = "Bububu"
-    service.add_response('fetch_movie', tmdb_movie_response)
-    service.add_response('add_movie_credits', tmdb_movie_response)
-    service.add_response('fetch_trailer_movie', [tmdb_movie_response])
-
-    movie = movie_service.create_movie(1)
-
-
-
-def test_should_create_movie(
-        mocker: MockerFixture, movie: Movie, resource_id: int, tmdb_actor
+@pytest.mark.django_db
+def test_create_movie(
+    mocker: MockerFixture,
+    tmdb_movie_response,
+    tmdb_movie_trailer,
+    tmdb_movie_credits,
+    resource_id,
+    tmdb_genre_list,
 ):
     mocker.patch(
-        "movies.serializers.movie_serializer.FullMovieSerializer.is_valid",
-        return_value=True,
-    )
-    mocker.patch(
-        "movies.serializers.movie_serializer.FullMovieSerializer.save",
-        return_value=movie,
+        "movies.apps.MoviesConfig.ready",
+        return_value=None,
     )
 
-    mocker.patch(
-        "movies.serializers.movie_serializer.FullMovieSerializer.data",
-        return_value=movie,
-    )
+    service = FakeTmdbService()
+    movie_service = MovieService(service)
 
-    mocker.patch(
-        "movies.services.genre_service.GenreService.find_or_create_genre",
-        return_value={"name": "Thriller"},
-    )
+    service.clear_responses()
 
-    result = movie_service.create_movie(resource_id)
+    service.add_response("fetch_movie", [tmdb_movie_response])
+    service.add_response("fetch_movie_trailer", [tmdb_movie_trailer])
+    service.add_response("fetch_movie_credits", [tmdb_movie_credits])
+    # service.add_response("fetch_movie_genres", [tmdb_genre_list])
 
-    assert len(result["genres"]) == 0
+    movie_service.create_movie(resource_id)
 
-# def test_should_create_movie_x(
-#     mocker: MockerFixture, movie: Movie, resource_id: int, tmdb_actor
-# ):
-#     mocker.patch(
-#         "movies.serializers.movie_serializer.FullMovieSerializer.is_valid",
-#         return_value=False,
-#         side_effect=ValidationError(detail={"non_field_errors": ["error"]}),
-#     )
+
+# def test_fetch_movie(tmdb_movie_response):
+# service.clear_responses()
 #
-#     movie_service.create_movie(resource_id)
+# tmdb_movie_response.original_title = "Bububu"
+# service.add_response("fetch_movie", tmdb_movie_response)
+# service.add_response("add_movie_credits", tmdb_movie_response)
+# service.add_response("fetch_trailer_movie", [tmdb_movie_response])
+#
+# movie = movie_service.create_movie(1)

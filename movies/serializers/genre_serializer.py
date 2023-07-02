@@ -10,6 +10,5 @@ class FullGenreSerializer(serializers.ModelSerializer[Genre]):
         model = Genre
         fields = "__all__"
 
-    def validate_name(self, genres):
-        return [genre in GenreName.values() for genre in genres]
-
+    def validate_name(self, genre):
+        return genre if genre in GenreName.values() else GenreName.OTHER

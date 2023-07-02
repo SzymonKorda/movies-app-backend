@@ -1,9 +1,6 @@
-from datetime import date, datetime
-from typing import Union
+from datetime import date
 
 from django.db import models
-
-from movies.payload.tmdb_movie_response import TmdbMovieResponse
 
 
 class Movie(models.Model):

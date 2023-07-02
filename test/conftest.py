@@ -6,7 +6,6 @@ import pytest
 
 from movies.models.movie import Movie
 from movies.payload.tmdb_actor_response import TmdbActorResponse
-from movies.payload.tmdb_movie_response import TmdbMovieResponse
 
 RESOURCE_ID = 1
 ENCODING = "utf-8"
@@ -34,59 +33,84 @@ def resource_id() -> int:
 
 
 @pytest.fixture
-def tmdb_movie_response() -> TmdbMovieResponse:
-    return TmdbMovieResponse(
-        **{
-            "original_title": "Forrest Gump",
-            "overview": "Description",
-            "budget": 55000000.0,
-            "runtime": 142,
-            "release_date": "1994-06-23",
-            "poster_path": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
-            "backdrop_path": "/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg",
-            "adult": False,
-            "imdb_id": "tt0109830",
-            "revenue": 677387716.0,
-            "status": "Released",
-            "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
-            "genres": [{"id": 1, "name": "Genre1"}, {"id": 2, "name": "Genre2"}],
-        }
-    )
+def tmdb_movie_response() -> dict:
+    return {
+        "original_title": "Forrest Gump",
+        "overview": "Description",
+        "budget": 55000000.0,
+        "runtime": 142,
+        "release_date": "1994-06-23",
+        "poster_path": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+        "backdrop_path": "/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg",
+        "adult": False,
+        "imdb_id": "tt0109830",
+        "revenue": 677387716.0,
+        "status": "Released",
+        "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
+        "genres": [
+            {"id": 70, "name": "Drama"},
+            {"id": 6, "name": "Thriller"},
+            {"id": 61, "name": "Genre"},
+        ],
+    }
 
 
-# @pytest.fixture
-# def tmdb_movie_trailer() -> bytes:
-#     return json.dumps(
-#         {
-#             "results": [
-#                 {"site": "Youtube", "key": "0YAKkHutmFI", "official": True},
-#                 {"site": "Youtube", "key": "0YAdsfsmFI", "official": False},
-#             ]
-#         }
-#     ).encode(ENCODING)
+@pytest.fixture
+def tmdb_movie_trailer() -> dict:
+    return {
+        "results": [
+            {"site": "Youtube", "key": "0YAKkHutmFI", "official": True},
+            {"site": "Youtube", "key": "0YAdsfsmFI", "official": False},
+        ]
+    }
 
 
-# @pytest.fixture
-# def tmdb_movie_credits() -> bytes:
-#     return json.dumps(
-#         {
-#             "cast": [
-#                 {
-#                     "id": 1,
-#                 },
-#                 {
-#                     "id": 2,
-#                 },
-#                 {
-#                     "id": 3,
-#                 },
-#             ],
-#             "crew": [
-#                 {"name": "Name1", "job": "Producer"},
-#                 {"name": "Name2", "job": "Director"},
-#             ],
-#         }
-#     ).encode(ENCODING)
+@pytest.fixture
+def tmdb_movie_credits() -> dict:
+    return {
+        "cast": [
+            {
+                "id": 1,
+            },
+            {
+                "id": 2,
+            },
+            {
+                "id": 3,
+            },
+        ],
+        "crew": [
+            {"name": "Name1", "job": "Producer"},
+            {"name": "Name2", "job": "Director"},
+        ],
+    }
+
+
+@pytest.fixture
+def tmdb_genre_list() -> dict:
+    return {
+        "genres": [
+            {"name": "Action"},
+            {"name": "Adventure"},
+            {"name": "Animation"},
+            {"name": "Comedy"},
+            {"name": "Crime"},
+            {"name": "Documentary"},
+            {"name": "Drama"},
+            {"name": "Family"},
+            {"name": "Fantasy"},
+            {"name": "History"},
+            {"name": "Horror"},
+            {"name": "Music"},
+            {"name": "Mystery"},
+            {"name": "Romance"},
+            {"name": "Science Fiction"},
+            {"name": "TV Movie"},
+            {"name": "Thriller"},
+            {"name": "War"},
+            {"name": "Western"},
+        ]
+    }
 
 
 # @pytest.fixture

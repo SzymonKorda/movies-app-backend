@@ -19,7 +19,7 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
 
     def to_representation(self, instance) -> Any:
         representation = super().to_representation(instance)
-        representation['genres'] = self.initial_data['genre_names']
+        representation["genres"] = self.initial_data["genre_names"]
         return representation
 
     class Meta:
@@ -72,7 +72,7 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
         return next(member["name"] for member in crew if member["job"] == "Director")
 
     def prepare_trailer_path(self) -> str:
-        movie_trailers = self.initial_data['results']
+        movie_trailers = self.initial_data["results"]
         official_trailers: List[dict] = [
             trailer for trailer in movie_trailers if trailer["official"]
         ]
