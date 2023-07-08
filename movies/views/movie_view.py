@@ -1,5 +1,6 @@
-from typing import Optional, List
+from typing import Optional
 
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import transaction
 from django.db.models import QuerySet
 from django.http import HttpRequest, JsonResponse
@@ -34,10 +35,9 @@ class MovieView(APIView):
             status=status.HTTP_200_OK,
         )
 
-    @transaction.atomic
     def post(self, request: HttpRequest) -> JsonResponse:
         movie_id: int = JSONParser().parse(request)["movie_id"]
-        movie: ReturnDict = self.movie_service.create_movie(movie_id)
+        movie: dict = self.movie_service.create_movie(movie_id)
         return JsonResponse({"data": movie}, status=status.HTTP_201_CREATED)
 
     def put(self, request: HttpRequest, movie_id: int) -> JsonResponse:

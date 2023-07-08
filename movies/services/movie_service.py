@@ -1,6 +1,7 @@
 import os
 from typing import List, Mapping
 
+from django.db import transaction
 from django.db.models import QuerySet
 from django.http import HttpRequest
 from rest_framework.exceptions import NotFound
@@ -28,7 +29,6 @@ class MovieService:
         self.tmdb_service = tmdb_service
         self.actor_service = ActorService()
         self.genre_service = GenreService()
-        self.serializer = FullMovieSerializer()
 
     def get_movie(self, movie_id: int) -> Movie:
         return self.find_movie(movie_id)
@@ -36,28 +36,20 @@ class MovieService:
     def get_all_movies(self, search_query: str) -> QuerySet[Movie]:
         return Movie.objects.filter(title__icontains=search_query)
 
-    def create_movie(self, movie_id: int) -> ReturnDict:
-        genres_id, movie_request = self.prepare_movie_data(movie_id)
-        self.serializer = FullMovieSerializer(data=movie_request)
-        self.serializer.is_valid(raise_exception=True)
-        movie: Movie = self.serializer.save()
-        movie.genres.add(*genres_id)
-        return self.serializer.data
+    @transaction.atomic
+    def create_movie(self, movie_id: int) -> dict:
+        movie_request = self.prepare_movie_data(movie_id)
+        serializer = FullMovieSerializer(data=movie_request)
+        serializer.is_valid(raise_exception=True)
+        movie: Movie = serializer.save()
+        # TODO: return id directly from serializer .data
+        return {"id": movie.id, **serializer.validated_data}
 
-    def prepare_movie_data(self, movie_id):
+    def prepare_movie_data(self, movie_id: int) -> dict:
         movie_details: dict = self.tmdb_service.fetch_movie(movie_id)
         movie_trailer: dict = self.tmdb_service.fetch_movie_trailer(movie_id)
         movie_credits: dict = self.tmdb_service.fetch_movie_credits(movie_id)
-        genres = self.genre_service.get_genres_by_name(movie_details["genres"])
-        genres_id = [genre.id for genre in genres]
-        genre_names = [genre.name for genre in genres]
-        movie_data = {
-            **movie_details,
-            **movie_credits,
-            **movie_trailer,
-            **{"genre_names": genre_names},
-        }
-        return genres_id, movie_data
+        return {**movie_details, **movie_credits, **movie_trailer}
 
     def update_movie(self, movie_id: int, request: HttpRequest) -> ReturnDict:
         movie: Movie = self.find_movie(movie_id)

@@ -47,11 +47,6 @@ def tmdb_movie_response() -> dict:
         "revenue": 677387716.0,
         "status": "Released",
         "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
-        "genres": [
-            {"id": 70, "name": "Drama"},
-            {"id": 6, "name": "Thriller"},
-            {"id": 61, "name": "Genre"},
-        ],
     }
 
 
