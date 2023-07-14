@@ -16,11 +16,8 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
     poster_path = serializers.CharField(source="poster_key")
     backdrop_path = serializers.CharField(source="backdrop_key")
 
-    def create(self, validated_data: dict):
-        # validated_data.update({"director": self.data["director"]})
-        # validated_data.update({"trailer_key": self.data["trailer_key"]})
-        return super().create(validated_data)
-
+    # TODO: find a better way to return SerializerMethodField fields
+    #  or another way to add custom logic for serializer field (e.g: director)
     def validate(self, attrs: Any) -> Any:
         attrs.update({"director": self.prepare_movie_director()})
         attrs.update({"trailer_key": self.prepare_trailer_key()})

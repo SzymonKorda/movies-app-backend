@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 from unittest.mock import MagicMock
@@ -31,11 +32,17 @@ def tmdb_actor() -> TmdbActorResponse:
 def resource_id() -> int:
     return RESOURCE_ID
 
+@pytest.fixture
+def cleanup() -> None:
+    yield
+    # This is executed when the test using the fixture is done
+    Movie.objects.all().delete()
+
 
 @pytest.fixture
 def tmdb_movie_response() -> dict:
     return {
-        "original_title": "Forrest Gump",
+        "title": "Forrest Gump",
         "overview": "Description",
         "budget": 55000000.0,
         "runtime": 142,
@@ -47,6 +54,26 @@ def tmdb_movie_response() -> dict:
         "revenue": 677387716.0,
         "status": "Released",
         "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
+    }
+
+@pytest.fixture
+def movie_response() -> dict:
+    return {
+        "id": 1,
+        "title": "Forrest Gump",
+        "description": "Description",
+        "box_office": 55000000.0,
+        "duration": 142,
+        "release_date": datetime.date(1994, 6, 23),
+        "poster_key": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+        "backdrop_key": "/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg",
+        "adult": False,
+        "imdb_key": "tt0109830",
+        "revenue": 677387716.0,
+        "status": "Released",
+        "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
+        "director": "Name2",
+        "trailer_key": "0YAKkHutmFI",
     }
 
 
