@@ -6,7 +6,7 @@ from rest_framework import serializers
 from movies.models.movie import Movie
 
 
-class FullMovieSerializer(serializers.ModelSerializer[Movie]):
+class FullTmdbMovieSerializer(serializers.ModelSerializer[Movie]):
     overview = serializers.CharField(source="description")
     budget = serializers.FloatField(source="box_office")
     runtime = serializers.IntegerField(source="duration")
@@ -76,6 +76,13 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
         return trailer_key
 
 
+class FullMovieSerializer(serializers.ModelSerializer[Movie]):
+    class Meta:
+        id = serializers.ReadOnlyField()
+        model = Movie
+        fields = "__all__"
+
+
 class SimpleMovieSerializer(serializers.ModelSerializer[Movie]):
     class Meta:
         id = serializers.ReadOnlyField()
@@ -86,7 +93,7 @@ class SimpleMovieSerializer(serializers.ModelSerializer[Movie]):
             "release_date",
             "duration",
             "description",
-            "poster_path",
+            "poster_key",
         )
 
 

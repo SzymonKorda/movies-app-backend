@@ -9,8 +9,9 @@ from rest_framework.views import APIView
 
 from movies.models.movie import Movie
 from movies.serializers.movie_serializer import (
-    FullMovieSerializer,
+    FullTmdbMovieSerializer,
     SimpleMovieSerializer,
+    FullMovieSerializer,
 )
 from movies.services.genre_service import GenreService
 from movies.services.movie_service import MovieService
@@ -24,15 +25,9 @@ class MovieView(APIView):
     def get(self, request: HttpRequest, movie_id: Optional[int] = None) -> JsonResponse:
         if movie_id:
             movie: Movie = self.movie_service.get_movie(movie_id)
-            return JsonResponse(
-                {"data": FullMovieSerializer(movie).data}, status=status.HTTP_200_OK
-            )
-        search_query: str = request.GET.get("search", default="")
-        movies: QuerySet[Movie] = self.movie_service.get_all_movies(search_query)
-        return JsonResponse(
-            {"data": SimpleMovieSerializer(movies, many=True).data},
-            status=status.HTTP_200_OK,
-        )
+            return JsonResponse({"data": movie}, status=status.HTTP_200_OK)
+        movies = self.movie_service.get_all_movies()
+        return JsonResponse({"data": movies}, status=status.HTTP_200_OK)
 
     def post(self, request: HttpRequest) -> JsonResponse:
         movie_id: int = JSONParser().parse(request)["movie_id"]

@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from movies.models import MovieGenre
 from movies.models.genre import Genre
 from movies.utils.genre_name import GenreName
 
