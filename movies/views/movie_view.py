@@ -1,7 +1,5 @@
 from typing import Optional
 
-from django.core.handlers.wsgi import WSGIRequest
-from django.db import transaction
 from django.db.models import QuerySet
 from django.http import HttpRequest, JsonResponse
 from rest_framework import status
@@ -80,6 +78,12 @@ class MovieGenresView(APIView):
         super().__init__(*args, **kwargs)
 
     # permission_classes = [IsAuthenticated]
+
+    def post(self, request: HttpRequest, movie_id: int):
+        self.movie_service.add_genres_to_movie(movie_id)
+        return JsonResponse(
+            {"message": "Genres added to movie successfully"}, status=status.HTTP_200_OK
+        )
 
     def get(self, request: HttpRequest, movie_id: int) -> JsonResponse:
         movie_genres: ReturnDict = self.movie_service.get_movie_genres(movie_id)

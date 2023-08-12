@@ -8,6 +8,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.parsers import JSONParser
 from rest_framework.utils.serializer_helpers import ReturnDict
 
+from movies.models import MovieGenre
 from movies.models.actor import Actor
 from movies.models.movie import Movie
 from movies.payload.movie_update_request import MovieUpdateRequest
@@ -44,6 +45,14 @@ class MovieService:
         movie: Movie = serializer.save()
         # TODO: return id directly from serializer .data
         return {"id": movie.id, **serializer.validated_data}
+
+    def add_genres_to_movie(self, tmdb_movie_id):
+        movie_data = self.tmdb_service.fetch_movie(tmdb_movie_id)
+        movie_id = Movie.objects.filter(title=movie_data['title']).get().id
+        genre_names = [genre["name"] for genre in movie_data["genres"]]
+        genres = self.genre_service.get_genres_by_name(genre_names)
+        movie_genres = [MovieGenre(movie_id=movie_id, genre_id=genre['id']) for genre in genres]
+        MovieGenre.objects.bulk_create(movie_genres)
 
     def prepare_movie_data(self, movie_id: int) -> dict:
         movie_details: dict = self.tmdb_service.fetch_movie(movie_id)
