@@ -1,17 +1,15 @@
 import os
-from typing import List, Mapping
+from typing import List
 
 from django.db import transaction
 from django.db.models import QuerySet
 from django.http import HttpRequest
 from rest_framework.exceptions import NotFound
-from rest_framework.parsers import JSONParser
 from rest_framework.utils.serializer_helpers import ReturnDict
 
 from movies.models import MovieGenre
 from movies.models.actor import Actor
 from movies.models.movie import Movie
-from movies.payload.movie_update_request import MovieUpdateRequest
 from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.serializers.movie_serializer import (
     FullTmdbMovieSerializer,
@@ -32,7 +30,7 @@ class MovieService:
         self.actor_service = ActorService()
         self.genre_service = GenreService()
 
-    def get_movie(self, movie_id: int) -> Movie:
+    def get_movie(self, movie_id: int) -> dict:
         return FullMovieSerializer(self.find_movie(movie_id)).data
 
     def get_all_movies(self) -> QuerySet[Movie]:
@@ -63,11 +61,10 @@ class MovieService:
         movie_credits: dict = self.tmdb_service.fetch_movie_credits(movie_id)
         return {**movie_details, **movie_credits, **movie_trailer}
 
-    def update_movie(self, movie_id: int, request: HttpRequest) -> ReturnDict:
+    def update_movie(self, movie_id: int, update_request: HttpRequest) -> ReturnDict:
         movie: Movie = self.find_movie(movie_id)
-        movie_data: Mapping[str, MovieUpdateRequest] = JSONParser().parse(request)
-        movie_serializer: FullTmdbMovieSerializer = FullTmdbMovieSerializer(
-            movie, data=movie_data, partial=True
+        movie_serializer: FullMovieSerializer = FullMovieSerializer(
+            movie, data=update_request, partial=True
         )
         movie_serializer.is_valid(raise_exception=True)
         movie_serializer.save()
