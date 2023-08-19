@@ -6,7 +6,6 @@ from rest_framework.parsers import JSONParser
 from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
-from movies.models.movie import Movie
 from movies.services.genre_service import GenreService
 from movies.services.movie_service import MovieService
 from movies.services.tmdb_service import TmdbService
@@ -18,7 +17,7 @@ class MovieView(APIView):
 
     def get(self, request: HttpRequest, movie_id: Optional[int] = None) -> JsonResponse:
         if movie_id:
-            movie: Movie = self.movie_service.get_movie(movie_id)
+            movie: dict = self.movie_service.get_movie(movie_id)
             return JsonResponse({"data": movie}, status=status.HTTP_200_OK)
         movies = self.movie_service.get_all_movies()
         return JsonResponse({"data": movies}, status=status.HTTP_200_OK)

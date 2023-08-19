@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Dict
 
 from django.db import transaction
 from django.db.models import QuerySet
@@ -14,7 +14,8 @@ from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
 from movies.serializers.movie_serializer import (
     FullTmdbMovieSerializer,
     SearchMovieSerializer,
-    SimpleMovieSerializer, FullMovieSerializer,
+    SimpleMovieSerializer,
+    FullMovieSerializer,
 )
 from movies.services.actor_service import ActorService
 from movies.services.genre_service import GenreService
@@ -33,7 +34,7 @@ class MovieService:
     def get_movie(self, movie_id: int) -> dict:
         return FullMovieSerializer(self.find_movie(movie_id)).data
 
-    def get_all_movies(self) -> QuerySet[Movie]:
+    def get_all_movies(self) -> List[Dict]:
         return SimpleMovieSerializer(Movie.objects.all(), many=True).data
 
     @transaction.atomic

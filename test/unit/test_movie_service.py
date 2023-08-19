@@ -1,4 +1,5 @@
 import pytest
+from pytest_django.fixtures import django_db_reset_sequences
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import ValidationError
 
@@ -9,7 +10,7 @@ service = FakeTmdbService()
 movie_service = MovieService(service)
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(reset_sequences=True)
 def test_should_create_movie_with_director_and_trailer_key(
     mocker: MockerFixture,
     cleanup,
@@ -17,7 +18,7 @@ def test_should_create_movie_with_director_and_trailer_key(
     tmdb_movie_trailer,
     tmdb_movie_credits,
     resource_id,
-    movie_response,
+    created_movie_response,
 ):
     # given
     service.clear_responses()
@@ -31,11 +32,11 @@ def test_should_create_movie_with_director_and_trailer_key(
 
     # then
     assert spy.call_count == 1
-    assert result == movie_response
+    assert result == created_movie_response
 
 
 @pytest.mark.django_db
-def test_should_prepare_movie_data(
+def test_should_prepare_movie_data_to_create_movie(
     tmdb_movie_response,
     tmdb_movie_trailer,
     tmdb_movie_credits,
@@ -77,4 +78,42 @@ def test_should_throw_validation_error_when_to_title_from_response_is_present(
 
     # then
     assert e.type is ValidationError
-    assert e.value.detail['title'][0] == 'This field is required.'
+    assert e.value.detail["title"][0] == "This field is required."
+
+
+@pytest.mark.django_db(reset_sequences=True)
+def test_should_get_full_movie_data(
+    movie_1, get_full_movie_1_response, resource_id, cleanup
+):
+    # given
+    movie_1.save()
+
+    # when
+    result = movie_service.get_movie(resource_id)
+
+    # then
+    assert result == get_full_movie_1_response
+
+
+@pytest.mark.django_db(reset_sequences=True)
+def test_should_get_simple_all_movie_data(
+    movie_1,
+    movie_2,
+    movie_3,
+    get_simple_movie_1_response,
+    get_simple_movie_2_response,
+    get_simple_movie_3_response,
+    cleanup,
+):
+    # given
+    movie_1.save()
+    movie_2.save()
+    movie_3.save()
+
+    # when
+    result = movie_service.get_all_movies()
+
+    # then
+    assert dict(result[0]) == get_simple_movie_1_response
+    assert dict(result[1]) == get_simple_movie_2_response
+    assert dict(result[2]) == get_simple_movie_3_response
