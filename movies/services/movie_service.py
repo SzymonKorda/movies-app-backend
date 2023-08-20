@@ -2,7 +2,6 @@ import os
 from typing import List, Dict
 
 from django.db import transaction
-from django.db.models import QuerySet
 from django.http import HttpRequest
 from rest_framework.exceptions import NotFound
 from rest_framework.utils.serializer_helpers import ReturnDict
@@ -62,7 +61,7 @@ class MovieService:
         movie_credits: dict = self.tmdb_service.fetch_movie_credits(movie_id)
         return {**movie_details, **movie_credits, **movie_trailer}
 
-    def update_movie(self, movie_id: int, update_request: HttpRequest) -> ReturnDict:
+    def update_movie(self, movie_id: int, update_request: dict) -> ReturnDict:
         movie: Movie = self.find_movie(movie_id)
         movie_serializer: FullMovieSerializer = FullMovieSerializer(
             movie, data=update_request, partial=True

@@ -201,6 +201,21 @@ def get_simple_movie_3_response() -> dict:
 
 
 @pytest.fixture
+def movie_1_valid_update_request() -> dict:
+    return {
+        "title": "Updated title",
+        "poster_key": "/updated_poster_key.jpg",
+    }
+
+
+@pytest.fixture
+def movie_1_invalid_update_request() -> dict:
+    return {
+        "title": datetime.date(1994, 6, 23),
+    }
+
+
+@pytest.fixture
 def tmdb_movie_trailer() -> dict:
     return {
         "results": [

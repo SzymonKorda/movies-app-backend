@@ -1,5 +1,4 @@
 import pytest
-from pytest_django.fixtures import django_db_reset_sequences
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import ValidationError
 
@@ -117,3 +116,44 @@ def test_should_get_simple_all_movie_data(
     assert dict(result[0]) == get_simple_movie_1_response
     assert dict(result[1]) == get_simple_movie_2_response
     assert dict(result[2]) == get_simple_movie_3_response
+
+
+@pytest.mark.django_db(reset_sequences=True)
+def test_should_update_movie_title_and_poster_key(
+    movie_1,
+    movie_1_valid_update_request,
+    get_full_movie_1_response,
+    resource_id,
+):
+    # given
+    movie_1.save()
+    get_full_movie_1_response.update(
+        [
+            ("title", movie_1_valid_update_request["title"]),
+            ("poster_key", movie_1_valid_update_request["poster_key"]),
+        ]
+    )
+
+    # when
+    result = movie_service.update_movie(resource_id, movie_1_valid_update_request)
+
+    # then
+    assert result == get_full_movie_1_response
+
+
+@pytest.mark.django_db(reset_sequences=True)
+def test_should_throw_validation_error_when_title_is_not_valid_string(
+    movie_1,
+    movie_1_invalid_update_request,
+    resource_id,
+):
+    # given
+    movie_1.save()
+
+    # when
+    with pytest.raises(ValidationError) as e:
+        movie_service.update_movie(resource_id, movie_1_invalid_update_request)
+
+    # then
+    assert e.type is ValidationError
+    assert e.value.detail["title"][0] == "Not a valid string."
