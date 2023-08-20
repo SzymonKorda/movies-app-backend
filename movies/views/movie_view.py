@@ -1,18 +1,11 @@
-from typing import Optional, List
+from typing import Optional
 
-from django.db import transaction
-from django.db.models import QuerySet
 from django.http import HttpRequest, JsonResponse
 from rest_framework import status
 from rest_framework.parsers import JSONParser
 from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
-from movies.models.movie import Movie
-from movies.serializers.movie_serializer import (
-    FullMovieSerializer,
-    SimpleMovieSerializer,
-)
 from movies.services.movie_service import MovieService
 from movies.services.tmdb_service import TmdbService
 
@@ -23,25 +16,19 @@ class MovieView(APIView):
 
     def get(self, request: HttpRequest, movie_id: Optional[int] = None) -> JsonResponse:
         if movie_id:
-            movie: Movie = self.movie_service.get_movie(movie_id)
-            return JsonResponse(
-                {"data": FullMovieSerializer(movie).data}, status=status.HTTP_200_OK
-            )
-        search_query: str = request.GET.get("search", default="")
-        movies: QuerySet[Movie] = self.movie_service.get_all_movies(search_query)
-        return JsonResponse(
-            {"data": SimpleMovieSerializer(movies, many=True).data},
-            status=status.HTTP_200_OK,
-        )
+            movie: dict = self.movie_service.get_movie(movie_id)
+            return JsonResponse({"data": movie}, status=status.HTTP_200_OK)
+        movies = self.movie_service.get_all_movies()
+        return JsonResponse({"data": movies}, status=status.HTTP_200_OK)
 
-    @transaction.atomic
     def post(self, request: HttpRequest) -> JsonResponse:
         movie_id: int = JSONParser().parse(request)["movie_id"]
-        movie: ReturnDict = self.movie_service.create_movie(movie_id)
+        movie: dict = self.movie_service.create_movie(movie_id)
         return JsonResponse({"data": movie}, status=status.HTTP_201_CREATED)
 
     def put(self, request: HttpRequest, movie_id: int) -> JsonResponse:
-        movie: ReturnDict = self.movie_service.update_movie(movie_id, request)
+        update_request = JSONParser().parse(request)
+        movie: ReturnDict = self.movie_service.update_movie(movie_id, update_request)
         return JsonResponse({"data": movie}, status=status.HTTP_200_OK)
 
     def delete(self, request: HttpRequest, movie_id: int) -> JsonResponse:
@@ -81,8 +68,14 @@ class MovieGenresView(APIView):
 
     # permission_classes = [IsAuthenticated]
 
+    def post(self, request: HttpRequest, movie_id: int):
+        self.movie_service.add_genres_to_movie(movie_id)
+        return JsonResponse(
+            {"message": "Genres added to movie successfully"}, status=status.HTTP_200_OK
+        )
+
     def get(self, request: HttpRequest, movie_id: int) -> JsonResponse:
-        movie_genres: ReturnDict = self.movie_service.get_movie_genres(movie_id)
+        movie_genres = self.movie_service.get_genres_from_movie(movie_id)
         return JsonResponse({"data": movie_genres}, status=status.HTTP_200_OK)
 
 

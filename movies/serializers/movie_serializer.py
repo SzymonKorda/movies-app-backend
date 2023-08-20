@@ -1,26 +1,27 @@
 from datetime import datetime
-from typing import Union, Any, List
+from typing import List, Any
 
 from rest_framework import serializers
 
 from movies.models.movie import Movie
 
-TMDB_IMAGE_URI = "https://image.tmdb.org/t/p/w500"
-IMDB_MOVIE_URI = "https://www.imdb.com/title/"
 
-
-class FullMovieSerializer(serializers.ModelSerializer[Movie]):
+class FullTmdbMovieSerializer(serializers.ModelSerializer[Movie]):
     overview = serializers.CharField(source="description")
     budget = serializers.FloatField(source="box_office")
     runtime = serializers.IntegerField(source="duration")
-    imdb_id = serializers.CharField(source="imdb_path")
+    imdb_id = serializers.CharField(source="imdb_key")
     director = serializers.SerializerMethodField()
-    trailer_path = serializers.SerializerMethodField()
+    trailer_key = serializers.SerializerMethodField()
+    poster_path = serializers.CharField(source="poster_key")
+    backdrop_path = serializers.CharField(source="backdrop_key")
 
-    def to_representation(self, instance) -> Any:
-        representation = super().to_representation(instance)
-        representation["genres"] = self.initial_data["genre_names"]
-        return representation
+    # TODO: find a better way to return SerializerMethodField fields
+    #  or another way to add custom logic for serializer field (e.g: director)
+    def validate(self, attrs: Any) -> Any:
+        attrs.update({"director": self.prepare_movie_director()})
+        attrs.update({"trailer_key": self.prepare_trailer_key()})
+        return super().validate(attrs)
 
     class Meta:
         id = serializers.ReadOnlyField()
@@ -40,11 +41,11 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
             "status",
             "tagline",
             "director",
-            "trailer_path",
+            "trailer_key",
         )
 
-    def get_trailer_path(self, results):
-        return self.prepare_trailer_path()
+    def get_trailer_key(self, trailer_key):
+        return self.prepare_trailer_key()
 
     def get_director(self, director):
         return self.prepare_movie_director()
@@ -55,15 +56,6 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
     def get_release_date(self, release_date):
         return datetime.strptime(release_date, "%Y-%m-%d").date()
 
-    def get_poster_path(self, poster_path):
-        return self.prepare_resource_path(TMDB_IMAGE_URI, poster_path)
-
-    def get_backdrop_path(self, backdrop_path):
-        return self.prepare_resource_path(TMDB_IMAGE_URI, backdrop_path)
-
-    def get_imdb_path(self, imdb_id):
-        return self.prepare_resource_path(IMDB_MOVIE_URI, imdb_id)
-
     def get_revenue(self, revenue):
         return float(revenue)
 
@@ -71,7 +63,7 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
         crew = self.initial_data["crew"]
         return next(member["name"] for member in crew if member["job"] == "Director")
 
-    def prepare_trailer_path(self) -> str:
+    def prepare_trailer_key(self) -> str:
         movie_trailers = self.initial_data["results"]
         official_trailers: List[dict] = [
             trailer for trailer in movie_trailers if trailer["official"]
@@ -81,13 +73,14 @@ class FullMovieSerializer(serializers.ModelSerializer[Movie]):
             if official_trailers
             else movie_trailers[0]["key"]
         )
-        return "https://www.youtube.com/watch?v=" + trailer_key
+        return trailer_key
 
-    @staticmethod
-    def prepare_resource_path(
-        resource_uri: str, resource_key: Union[str, None]
-    ) -> Union[str, None]:
-        return resource_uri + resource_key if resource_key else None
+
+class FullMovieSerializer(serializers.ModelSerializer[Movie]):
+    class Meta:
+        id = serializers.ReadOnlyField()
+        model = Movie
+        fields = "__all__"
 
 
 class SimpleMovieSerializer(serializers.ModelSerializer[Movie]):
@@ -100,7 +93,7 @@ class SimpleMovieSerializer(serializers.ModelSerializer[Movie]):
             "release_date",
             "duration",
             "description",
-            "poster_path",
+            "poster_key",
         )
 
 

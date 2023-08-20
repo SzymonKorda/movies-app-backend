@@ -8,7 +8,7 @@ class FullGenreSerializer(serializers.ModelSerializer[Genre]):
     class Meta:
         id = serializers.ReadOnlyField()
         model = Genre
-        fields = "__all__"
+        fields = ("name",)
 
     def validate_name(self, genre):
         return genre if genre in GenreName.values() else GenreName.OTHER
