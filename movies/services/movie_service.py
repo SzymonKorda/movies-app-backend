@@ -2,14 +2,14 @@ import os
 from typing import List, Dict
 
 from django.db import transaction
-from django.http import HttpRequest
 from rest_framework.exceptions import NotFound
 from rest_framework.utils.serializer_helpers import ReturnDict
 
-from movies.models import MovieGenre
+from movies.models import MovieGenre, Genre
 from movies.models.actor import Actor
 from movies.models.movie import Movie
 from movies.payload.tmdb_movie_search_response import TmdbMovieSearchResponse
+from movies.serializers.genre_serializer import FullGenreSerializer
 from movies.serializers.movie_serializer import (
     FullTmdbMovieSerializer,
     SearchMovieSerializer,
@@ -54,6 +54,13 @@ class MovieService:
             MovieGenre(movie_id=movie_id, genre_id=genre["id"]) for genre in genres
         ]
         MovieGenre.objects.bulk_create(movie_genres)
+
+    def get_genres_from_movie(self, movie_id):
+        movie_genres = list(MovieGenre.objects.filter(movie_id=movie_id).all().values())
+        genres_id = [movie_genre["genre_id"] for movie_genre in movie_genres]
+        return FullGenreSerializer(
+            Genre.objects.filter(id__in=genres_id), many=True
+        ).data
 
     def prepare_movie_data(self, movie_id: int) -> dict:
         movie_details: dict = self.tmdb_service.fetch_movie(movie_id)

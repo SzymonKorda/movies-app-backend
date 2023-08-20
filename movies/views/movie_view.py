@@ -6,7 +6,6 @@ from rest_framework.parsers import JSONParser
 from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework.views import APIView
 
-from movies.services.genre_service import GenreService
 from movies.services.movie_service import MovieService
 from movies.services.tmdb_service import TmdbService
 
@@ -65,7 +64,6 @@ class MovieActorsView(APIView):
 class MovieGenresView(APIView):
     def __init__(self, *args, **kwargs):
         self.movie_service = MovieService(TmdbService())
-        self.genre_service = GenreService()
         super().__init__(*args, **kwargs)
 
     # permission_classes = [IsAuthenticated]
@@ -77,7 +75,7 @@ class MovieGenresView(APIView):
         )
 
     def get(self, request: HttpRequest, movie_id: int) -> JsonResponse:
-        movie_genres = self.genre_service.get_genres_from_movie(movie_id)
+        movie_genres = self.movie_service.get_genres_from_movie(movie_id)
         return JsonResponse({"data": movie_genres}, status=status.HTTP_200_OK)
 
 

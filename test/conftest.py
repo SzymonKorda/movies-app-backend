@@ -53,6 +53,12 @@ def tmdb_movie_response() -> dict:
         "revenue": 677387716.0,
         "status": "Released",
         "tagline": "The world will never be the same once you've seen it through the eyes of Forrest Gump.",
+        "genres": [
+            {"id": 111, "name": "Comedy"},
+            {"id": 222, "name": "Drama"},
+            {"id": 333, "name": "Romance"},
+            {"id": 444, "name": "Other"},
+        ],
     }
 
 
@@ -269,6 +275,17 @@ def tmdb_genre_list() -> dict:
             {"name": "Thriller"},
             {"name": "War"},
             {"name": "Western"},
+        ]
+    }
+
+
+@pytest.fixture
+def movie_genres_data() -> dict:
+    return {
+        "data": [
+            {"genre_id": 4, "movie_id": 1},
+            {"genre_id": 7, "movie_id": 1},
+            {"genre_id": 14, "movie_id": 1},
         ]
     }
 

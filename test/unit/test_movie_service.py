@@ -2,6 +2,7 @@ import pytest
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import ValidationError
 
+from movies.models import MovieGenre, Genre, Movie
 from movies.services.movie_service import MovieService
 from test.unit.fake_tmdb_service import FakeTmdbService
 
@@ -157,3 +158,78 @@ def test_should_throw_validation_error_when_title_is_not_valid_string(
     # then
     assert e.type is ValidationError
     assert e.value.detail["title"][0] == "Not a valid string."
+
+
+# TODO: Find a way to spy call_count for movie_service_delete_movie.Movie.delete
+@pytest.mark.django_db(reset_sequences=True)
+def test_should_delete_movie(
+    mocker: MockerFixture,
+    movie_1,
+    resource_id,
+):
+    # given
+    movie_1.save()
+    # spy = mocker.spy(movie_service, "movies.models.movie.delete")
+
+    # when
+    movie_service.delete_movie(resource_id)
+
+    # then
+    assert len(Movie.objects.all().values()) == 0
+    # assert spy.call_count == 1
+
+
+# TODO use spy instead of fetching all MovieGenre's from database
+@pytest.mark.django_db(reset_sequences=True)
+def test_should_add_valid_genres_to_movie(
+    movie_1,
+    tmdb_genre_list,
+    tmdb_movie_response,
+    resource_id,
+):
+    # given
+    movie_1.save()
+    prepare_genres(tmdb_genre_list)
+    service.add_response("fetch_movie", tmdb_movie_response)
+
+    # when
+    movie_service.add_genres_to_movie(resource_id)
+
+    # then
+    result = list(MovieGenre.objects.all().values())
+    movie_genres_id = {genre["genre_id"] for genre in result}
+    assert len(movie_genres_id) == 3
+    assert {4, 7, 14} == movie_genres_id
+
+
+@pytest.mark.django_db(reset_sequences=True)
+def test(
+    movie_1,
+    tmdb_genre_list,
+    movie_genres_data,
+    resource_id,
+):
+    # given
+    movie_1.save()
+    prepare_genres(tmdb_genre_list)
+    prepare_movie_genres(movie_genres_data)
+
+    # when
+    result = movie_service.get_genres_from_movie(resource_id)
+    genre_names = {genre["name"] for genre in result}
+
+    # then
+    assert {"Comedy", "Drama", "Romance"} == genre_names
+
+
+def prepare_movie_genres(movie_genres_data):
+    movie_genres = [
+        MovieGenre(genre_id=genre["genre_id"], movie_id=genre["movie_id"])
+        for genre in movie_genres_data["data"]
+    ]
+    MovieGenre.objects.bulk_create(movie_genres)
+
+
+def prepare_genres(tmdb_genre_list):
+    genres = [Genre(name=genre["name"]) for genre in tmdb_genre_list["genres"]]
+    Genre.objects.bulk_create(genres)
