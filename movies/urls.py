@@ -17,6 +17,5 @@ urlpatterns = [
     path("actors/<int:actor_id>/movies", ActorMoviesView.as_view()),
     path("actors/<int:actor_id>/movies/<int:movie_id>", ActorMoviesView.as_view()),
     path("auth/register", UserView.as_view()),
-    path("auth/login", CustomTokenObtainPairView.as_view()),
-    path("auth/refresh", jwt_views.TokenRefreshView.as_view()),
+    path("auth/login", CustomTokenObtainPairView.as_view())
 ]

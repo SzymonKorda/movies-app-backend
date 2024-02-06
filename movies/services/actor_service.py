@@ -35,7 +35,7 @@ class ActorService:
 
     def create_actor(self, request: HttpRequest) -> ReturnDict:
         actor_id: int = JSONParser().parse(request)["actor_id"]
-        actor_details: TmdbActorResponse = self.tmdb_service.fetch_actor(actor_id)
+        actor_details: dict = self.tmdb_service.fetch_actor(actor_id)
         actor: Actor = Actor.from_response(actor_details)
         actor_serializer: FullActorSerializer = FullActorSerializer(
             data=model_to_dict(actor)
