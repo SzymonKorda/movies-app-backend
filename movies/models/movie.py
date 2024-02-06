@@ -18,6 +18,7 @@ class Movie(models.Model):
     tagline = models.CharField(max_length=500, default="", blank=True)
     trailer_key = models.CharField(max_length=500, default="")
     director = models.CharField(max_length=50, default="")
+    tmdb_id = models.IntegerField()
 
     class Meta:
         db_table = "movie"

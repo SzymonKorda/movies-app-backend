@@ -15,6 +15,7 @@ class FullTmdbMovieSerializer(serializers.ModelSerializer[Movie]):
     trailer_key = serializers.SerializerMethodField()
     poster_path = serializers.CharField(source="poster_key")
     backdrop_path = serializers.CharField(source="backdrop_key")
+    id = serializers.IntegerField(source="tmdb_id")
 
     # TODO: find a better way to return SerializerMethodField fields
     #  or another way to add custom logic for serializer field (e.g: director)

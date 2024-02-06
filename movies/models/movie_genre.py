@@ -10,4 +10,4 @@ class MovieGenre(models.Model):
 
     class Meta:
         db_table = "movie_genre"
-        unique_together = ("movie_id", "genre_id")
+        # unique_together = ("movie_id", "genre_id")
