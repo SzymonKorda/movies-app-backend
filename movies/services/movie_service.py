@@ -36,7 +36,6 @@ class MovieService:
     def get_all_movies(self) -> List[Dict]:
         return SimpleMovieSerializer(Movie.objects.all(), many=True).data
 
-    @transaction.atomic
     def create_movie(self, movie_id: int) -> dict:
         movie_request = self.prepare_movie_data(movie_id)
         serializer = FullTmdbMovieSerializer(data=movie_request)
@@ -45,10 +44,10 @@ class MovieService:
         # TODO: return id directly from serializer .data
         return {"id": movie.id, **serializer.validated_data}
 
-    def add_genres_to_movie(self, tmdb_movie_id):
-        movie_data = self.tmdb_service.fetch_movie(tmdb_movie_id)
-        movie_id = Movie.objects.filter(title=movie_data["title"]).get().id
-        genre_names = [genre["name"] for genre in movie_data["genres"]]
+    def add_genres_to_movie(self, movie_id):
+        movie: Movie = self.find_movie(movie_id)
+        tmdb_movie = self.tmdb_service.fetch_movie(movie.tmdb_id)
+        genre_names = [genre["name"] for genre in tmdb_movie["genres"]]
         genres = self.genre_service.get_genres_by_name(genre_names)
         movie_genres = [
             MovieGenre(movie_id=movie_id, genre_id=genre["id"]) for genre in genres
